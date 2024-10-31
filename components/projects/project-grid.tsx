@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Building2, Calendar, Users2 } from "lucide-react";
 import Link from "next/link";
 import { useFilters } from "@/contexts/filter-context";
+import Image from "next/image";
 
 const projects = [
   {
@@ -117,7 +118,7 @@ export function ProjectGrid() {
         project.location.toLowerCase().includes(filters.searchTerm.toLowerCase())
       : true;
 
-    const matchesStatus = filters.status === "all" ? true : project.status === filters.status;
+      const matchesStatus = filters.status.includes("all") || filters.status.includes(project.status);
 
     return matchesSearch && matchesStatus;
   });
@@ -128,10 +129,12 @@ export function ProjectGrid() {
         <Link href={`/projects/${project.id}`} key={project.id}>
           <Card className="overflow-hidden hover:shadow-lg transition-shadow">
             <div className="aspect-video relative">
-              <img
+            <Image
                 src={project.image}
                 alt={project.name}
-                className="object-cover w-full h-full"
+                layout="responsive"
+                width={800} // Ajusta el ancho y alto según lo necesario
+                height={450}
               />
               <Badge 
                 className={`absolute top-2 right-2 ${getStatusColor(project.status)}`}
