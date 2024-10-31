@@ -1,4 +1,4 @@
-"use client";
+'use client';
 
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
@@ -117,64 +117,70 @@ export function ProjectGrid() {
       ? project.name.toLowerCase().includes(filters.searchTerm.toLowerCase()) ||
         project.location.toLowerCase().includes(filters.searchTerm.toLowerCase())
       : true;
-
-      const matchesStatus = filters.status.includes("all") || filters.status.includes(project.status);
-
+  
+    // Verifica si `filters.status` es un array y si incluye el estado del proyecto o "all".
+    const matchesStatus = filters.status.length === 0 || filters.status.includes("all") || filters.status.includes(project.status);
+  
     return matchesSearch && matchesStatus;
   });
+  
 
   return (
     <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-      {filteredProjects.map((project) => (
-        <Link href={`/projects/${project.id}`} key={project.id}>
-          <Card className="overflow-hidden hover:shadow-lg transition-shadow">
-            <div className="aspect-video relative">
-            <Image
-                src={project.image}
-                alt={project.name}
-                layout="responsive"
-                width={800} // Ajusta el ancho y alto según lo necesario
-                height={450}
-              />
-              <Badge 
-                className={`absolute top-2 right-2 ${getStatusColor(project.status)}`}
-              >
-                {getStatusText(project.status)}
-              </Badge>
-            </div>
-            <CardHeader>
-              <h3 className="font-semibold text-lg">{project.name}</h3>
-              <p className="text-sm text-muted-foreground">{project.location}</p>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                <div className="space-y-2">
-                  <div className="flex justify-between text-sm">
-                    <span>Progreso</span>
-                    <span>{project.progress}%</span>
-                  </div>
-                  <Progress value={project.progress} />
-                </div>
-                <div className="flex justify-between text-sm text-muted-foreground">
-                  <div className="flex items-center">
-                    <Calendar className="mr-2 h-4 w-4" />
-                    <span>{project.startDate}</span>
-                  </div>
-                  <div className="flex items-center">
-                    <Users2 className="mr-2 h-4 w-4" />
-                    <span>{project.teamSize}</span>
-                  </div>
-                </div>
+      {filteredProjects.length > 0 ? (
+        filteredProjects.map((project) => (
+          <Link href={`/projects/${project.id}`} key={project.id}>
+            <Card className="overflow-hidden hover:shadow-lg transition-shadow">
+              <div className="aspect-video relative">
+                <Image
+                  src={project.image}
+                  alt={project.name}
+                  layout="responsive"
+                  width={800}
+                  height={450}
+                />
+                <Badge 
+                  className={`absolute top-2 right-2 ${getStatusColor(project.status)}`}
+                >
+                  {getStatusText(project.status)}
+                </Badge>
               </div>
-            </CardContent>
-            <CardFooter>
-              <div className="text-sm font-medium">
-                Presupuesto: ${project.budget.toLocaleString()}
-              </div>
-            </CardFooter>
-          </Card>
-        </Link>
-      ))}
+              <CardHeader>
+                <h3 className="font-semibold text-lg">{project.name}</h3>
+                <p className="text-sm text-muted-foreground">{project.location}</p>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <div className="flex justify-between text-sm">
+                      <span>Progreso</span>
+                      <span>{project.progress}%</span>
+                    </div>
+                    <Progress value={project.progress} />
+                  </div>
+                  <div className="flex justify-between text-sm text-muted-foreground">
+                    <div className="flex items-center">
+                      <Calendar className="mr-2 h-4 w-4" />
+                      <span>{project.startDate}</span>
+                    </div>
+                    <div className="flex items-center">
+                      <Users2 className="mr-2 h-4 w-4" />
+                      <span>{project.teamSize}</span>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+              <CardFooter>
+                <div className="text-sm font-medium">
+                  Presupuesto: ${project.budget.toLocaleString()}
+                </div>
+              </CardFooter>
+            </Card>
+          </Link>
+        ))
+      ) : (
+        <p className="text-center text-muted-foreground">No se encontraron proyectos.</p>
+      )}
     </div>
   );
 }
