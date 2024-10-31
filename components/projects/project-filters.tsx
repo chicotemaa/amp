@@ -17,6 +17,15 @@ const statusOptions = [
   { value: "on-hold", label: "En espera" },
 ];
 
+type FilterState = {
+  status: string[];
+  type: string[];
+  date: string[];
+  searchTerm: string;
+  sortBy: string;
+};
+
+
 const typeOptions = [
   { value: "all", label: "Todos los tipos" },
   { value: "residential", label: "Residencial" },
@@ -37,9 +46,10 @@ export function ProjectFilters() {
   const handleStatusChange = (value: string) => {
     setFilters(prev => ({
       ...prev,
-      status: value === "all" ? [] : [value],
+      status: value === "all" ? [] : [value], // Mantener como arreglo
     }));
   };
+  
 
   const handleTypeChange = (value: string) => {
     setFilters(prev => ({
@@ -60,8 +70,11 @@ export function ProjectFilters() {
       status: [],
       type: [],
       date: [],
+      searchTerm: "", // Añadir un valor por defecto para searchTerm
+      sortBy: "",     // Añadir un valor por defecto para sortBy
     });
   };
+  
 
   return (
     <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between mb-6">

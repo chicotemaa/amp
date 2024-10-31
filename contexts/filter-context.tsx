@@ -4,11 +4,12 @@ import React, { createContext, useContext, useState } from "react";
 
 interface FilterState {
   searchTerm: string;
-  status: string;
-  type: string;
-  date: string;
+  status: string[];
+  type: string[];
+  date: string[];
   sortBy: string;
 }
+
 
 interface FilterContextType {
   filters: FilterState;
@@ -20,11 +21,12 @@ const FilterContext = createContext<FilterContextType | undefined>(undefined);
 export function FilterProvider({ children }: { children: React.ReactNode }) {
   const [filters, setFilters] = useState<FilterState>({
     searchTerm: "",
-    status: "all",
-    type: "all",
-    date: "all",
+    status: [],
+    type: [],
+    date: [],
     sortBy: "newest"
   });
+  
 
   return (
     <FilterContext.Provider value={{ filters, setFilters }}>
