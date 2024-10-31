@@ -11,7 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { BarChart, LineChart } from "react-chartjs-2";
+import { Bar, Line } from "react-chartjs-2";
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -73,7 +73,7 @@ export function EmployeeProfileDialog({ employee }: { employee: any }) {
           <div className="flex items-center gap-4">
             <Avatar className="h-20 w-20">
               <AvatarImage src={employee.avatar} />
-              <AvatarFallback>{employee.name.split(" ").map(n => n[0]).join("")}</AvatarFallback>
+              <AvatarFallback>{employee.name.split(" ").map((n: any[]) => n[0]).join("")}</AvatarFallback>
             </Avatar>
             <div>
               <h2 className="text-2xl font-bold">{employee.name}</h2>
@@ -141,11 +141,11 @@ export function EmployeeProfileDialog({ employee }: { employee: any }) {
                 <CardHeader>
                   <CardTitle>Horas por Proyecto</CardTitle>
                 </CardHeader>
-                <CardContent>
-                  <div className="h-[300px]">
-                    <BarChart data={projectData} />
-                  </div>
-                </CardContent>
+                    <CardContent>
+                      <div className="h-[300px]">
+                        <Bar data={projectData} />
+                      </div>
+                    </CardContent>
               </Card>
             </TabsContent>
 
@@ -156,7 +156,7 @@ export function EmployeeProfileDialog({ employee }: { employee: any }) {
                 </CardHeader>
                 <CardContent>
                   <div className="h-[300px]">
-                    <LineChart data={performanceData} />
+                    <Line data={performanceData} />
                   </div>
                 </CardContent>
               </Card>
