@@ -131,7 +131,10 @@ export default function Header() {
               <div className="mt-6 space-y-1">
                 <NavLinks
                   className="flex flex-col space-y-1"
-                  onItemClick={() => document.querySelector('button[type="button"]')?.click()}
+                  onItemClick={() => {
+                    const button = document.querySelector('button[type="button"]') as HTMLButtonElement | null;
+                    button?.click();
+                  }}
                 />
               </div>
             </SheetContent>
