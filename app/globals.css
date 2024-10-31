@@ -1,0 +1,163 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  /* Modo Día - Colores Base */
+  --background: 220 33% 98%;
+  --foreground: 220 10% 18%;
+  
+  /* Colores Primarios */
+  --primary: 200 50% 75%;
+  --primary-foreground: 220 10% 18%;
+  
+  /* Colores Secundarios */
+  --secondary: 170 35% 80%;
+  --secondary-foreground: 220 10% 18%;
+  
+  /* Colores de Apoyo */
+  --muted: 260 20% 85%;
+  --muted-foreground: 220 10% 45%;
+  
+  /* Estados y Alertas */
+  --success: 160 35% 80%;
+  --warning: 45 100% 85%;
+  --error: 0 65% 85%;
+  
+  /* Elementos de Interfaz */
+  --card: 0 0% 100%;
+  --card-foreground: 220 10% 18%;
+  --popover: 0 0% 100%;
+  --popover-foreground: 220 10% 18%;
+  --border: 220 13% 90%;
+  --input: 220 13% 90%;
+  
+  /* Gráficos */
+  --chart-1: 200 50% 75%;
+  --chart-2: 170 35% 80%;
+  --chart-3: 260 20% 85%;
+  --chart-4: 45 100% 85%;
+  --chart-5: 0 65% 85%;
+  
+  --radius: 0.5rem;
+}
+
+.dark {
+  /* Modo Noche - Colores Base */
+  --background: 220 35% 13%;
+  --foreground: 0 0% 95%;
+  
+  /* Colores Primarios */
+  --primary: 200 35% 50%;
+  --primary-foreground: 0 0% 95%;
+  
+  /* Colores Secundarios */
+  --secondary: 180 35% 38%;
+  --secondary-foreground: 0 0% 95%;
+  
+  /* Colores de Apoyo */
+  --muted: 215 25% 27%;
+  --muted-foreground: 220 10% 75%;
+  
+  /* Estados y Alertas */
+  --success: 160 35% 35%;
+  --warning: 45 70% 75%;
+  --error: 0 65% 45%;
+  
+  /* Elementos de Interfaz */
+  --card: 220 35% 15%;
+  --card-foreground: 0 0% 95%;
+  --popover: 220 35% 15%;
+  --popover-foreground: 0 0% 95%;
+  --border: 215 25% 27%;
+  --input: 215 25% 27%;
+  
+  /* Gráficos */
+  --chart-1: 200 35% 50%;
+  --chart-2: 180 35% 38%;
+  --chart-3: 215 25% 27%;
+  --chart-4: 45 70% 75%;
+  --chart-5: 0 65% 45%;
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground antialiased;
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+}
+
+@layer components {
+  .card-hover {
+    @apply transition-all duration-300 hover:shadow-lg hover:-translate-y-1;
+  }
+  
+  .glass-effect {
+    @apply bg-white/10 backdrop-blur-lg border border-white/20;
+  }
+  
+  .btn-primary {
+    @apply px-4 py-2 rounded-md bg-primary text-primary-foreground hover:bg-primary/90 
+           transition-colors duration-200 font-medium;
+  }
+  
+  .btn-secondary {
+    @apply px-4 py-2 rounded-md bg-secondary text-secondary-foreground hover:bg-secondary/90 
+           transition-colors duration-200 font-medium;
+  }
+  
+  .input-field {
+    @apply px-3 py-2 rounded-md border border-input bg-background hover:border-primary/50 
+           focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all duration-200;
+  }
+  
+  .card-modern {
+    @apply bg-card text-card-foreground rounded-lg border border-border shadow-sm hover:shadow-md 
+           transition-all duration-200;
+  }
+}
+
+/* Patrones de Fondo */
+.pattern-grid {
+  background-image: 
+    linear-gradient(to right, rgba(128,128,128,0.05) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(128,128,128,0.05) 1px, transparent 1px);
+  background-size: 24px 24px;
+}
+
+.pattern-dots {
+  background-image: radial-gradient(circle, currentColor 1px, transparent 1px);
+  background-size: 24px 24px;
+  @apply text-primary/5;
+}
+
+/* Animaciones */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fadeIn {
+  animation: fadeIn 0.3s ease-out forwards;
+}
+
+/* Efectos de Hover */
+.hover-lift {
+  @apply transition-transform duration-200 hover:-translate-y-0.5;
+}
+
+.hover-glow {
+  @apply transition-shadow duration-200 hover:shadow-lg hover:shadow-primary/20;
+}
+
+/* Utilidades de Espaciado */
+.section-padding {
+  @apply py-8 md:py-12 lg:py-16;
+}
+
+.content-margin {
+  @apply my-4 md:my-6 lg:my-8;
+}
