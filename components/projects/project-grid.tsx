@@ -1,4 +1,4 @@
-'use client';
+"use client";
 
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
@@ -7,6 +7,7 @@ import { Building2, Calendar, Users2 } from "lucide-react";
 import Link from "next/link";
 import { useFilters } from "@/contexts/filter-context";
 import Image from "next/image";
+import { useCallback, useEffect, useState } from "react";
 
 const projects = [
   {
@@ -85,6 +86,9 @@ const projects = [
 
 export function ProjectGrid() {
   const { filters } = useFilters();
+  const [filteredProjects, setFilteredProjects] = useState(projects);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<Error | null>(null);
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -112,75 +116,105 @@ export function ProjectGrid() {
     }
   };
 
-  const filteredProjects = projects.filter(project => {
-    const matchesSearch = filters.searchTerm 
-      ? project.name.toLowerCase().includes(filters.searchTerm.toLowerCase()) ||
-        project.location.toLowerCase().includes(filters.searchTerm.toLowerCase())
-      : true;
-  
-    // Verifica si `filters.status` es un array y si incluye el estado del proyecto o "all".
-    const matchesStatus = filters.status.length === 0 || filters.status.includes("all") || filters.status.includes(project.status);
-  
-    return matchesSearch && matchesStatus;
-  });
-  
+  const filterProjects = useCallback(() => {
+    try {
+      const filtered = projects.filter(project => {
+        const matchesSearch = filters.searchTerm 
+          ? project.name.toLowerCase().includes(filters.searchTerm.toLowerCase()) ||
+            project.location.toLowerCase().includes(filters.searchTerm.toLowerCase())
+          : true;
+      
+        const matchesStatus = filters.status.length === 0 || 
+          filters.status.includes("all") || 
+          filters.status.includes(project.status);
+      
+        return matchesSearch && matchesStatus;
+      });
+      
+      setFilteredProjects(filtered);
+      setIsLoading(false);
+    } catch (err) {
+      setError(err instanceof Error ? err : new Error('Error al filtrar proyectos'));
+      setIsLoading(false);
+    }
+  }, [filters]);
+
+  useEffect(() => {
+    filterProjects();
+  }, [filterProjects]);
+
+  if (error) {
+    return (
+      <div className="text-center p-4">
+        <p className="text-destructive">Error: {error.message}</p>
+      </div>
+    );
+  }
+
+  if (isLoading) {
+    return <div className="text-center p-4">Cargando proyectos...</div>;
+  }
+
+  if (filteredProjects.length === 0) {
+    return (
+      <div className="text-center p-8">
+        <p className="text-muted-foreground">No se encontraron proyectos que coincidan con los filtros.</p>
+      </div>
+    );
+  }
 
   return (
     <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-      {filteredProjects.length > 0 ? (
-        filteredProjects.map((project) => (
-          <Link href={`/projects/${project.id}`} key={project.id}>
-            <Card className="overflow-hidden hover:shadow-lg transition-shadow">
-              <div className="aspect-video relative">
-                <Image
-                  src={project.image}
-                  alt={project.name}
-                  layout="responsive"
-                  width={800}
-                  height={450}
-                />
-                <Badge 
-                  className={`absolute top-2 right-2 ${getStatusColor(project.status)}`}
-                >
-                  {getStatusText(project.status)}
-                </Badge>
+      {filteredProjects.map((project) => (
+        <Link href={`/projects/${project.id}`} key={project.id}>
+          <Card className="overflow-hidden hover:shadow-lg transition-shadow">
+            <div className="aspect-video relative">
+              <Image
+                src={project.image}
+                alt={project.name}
+                layout="fill"
+                objectFit="cover"
+                priority
+              />
+              <Badge 
+                className={`absolute top-2 right-2 ${getStatusColor(project.status)}`}
+              >
+                {getStatusText(project.status)}
+              </Badge>
+            </div>
+            <CardHeader>
+              <h3 className="font-semibold text-lg">{project.name}</h3>
+              <p className="text-sm text-muted-foreground">{project.location}</p>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <div className="flex justify-between text-sm">
+                    <span>Progreso</span>
+                    <span>{project.progress}%</span>
+                  </div>
+                  <Progress value={project.progress} />
+                </div>
+                <div className="flex justify-between text-sm text-muted-foreground">
+                  <div className="flex items-center">
+                    <Calendar className="mr-2 h-4 w-4" />
+                    <span>{project.startDate}</span>
+                  </div>
+                  <div className="flex items-center">
+                    <Users2 className="mr-2 h-4 w-4" />
+                    <span>{project.teamSize}</span>
+                  </div>
+                </div>
               </div>
-              <CardHeader>
-                <h3 className="font-semibold text-lg">{project.name}</h3>
-                <p className="text-sm text-muted-foreground">{project.location}</p>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  <div className="space-y-2">
-                    <div className="flex justify-between text-sm">
-                      <span>Progreso</span>
-                      <span>{project.progress}%</span>
-                    </div>
-                    <Progress value={project.progress} />
-                  </div>
-                  <div className="flex justify-between text-sm text-muted-foreground">
-                    <div className="flex items-center">
-                      <Calendar className="mr-2 h-4 w-4" />
-                      <span>{project.startDate}</span>
-                    </div>
-                    <div className="flex items-center">
-                      <Users2 className="mr-2 h-4 w-4" />
-                      <span>{project.teamSize}</span>
-                    </div>
-                  </div>
-                </div>
-              </CardContent>
-              <CardFooter>
-                <div className="text-sm font-medium">
-                  Presupuesto: ${project.budget.toLocaleString()}
-                </div>
-              </CardFooter>
-            </Card>
-          </Link>
-        ))
-      ) : (
-        <p className="text-center text-muted-foreground">No se encontraron proyectos.</p>
-      )}
+            </CardContent>
+            <CardFooter>
+              <div className="text-sm font-medium">
+                Presupuesto: ${project.budget.toLocaleString()}
+              </div>
+            </CardFooter>
+          </Card>
+        </Link>
+      ))}
     </div>
   );
 }

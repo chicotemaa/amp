@@ -12,10 +12,12 @@ export const metadata: Metadata = {
   description: "Información detallada del proyecto",
 };
 
-// Esta función es requerida para la generación estática
 export async function generateStaticParams() {
-  // En un caso real, obtendríamos los IDs de los proyectos de una API
-  return [{ id: "1" }, { id: "2" }, { id: "3" }];
+  return [
+    { id: "1" },
+    { id: "2" },
+    { id: "3" }
+  ];
 }
 
 export default function ProjectDetailPage({ params }: { params: { id: string } }) {

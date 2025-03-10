@@ -2,7 +2,8 @@
 
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Building2, Calendar, MapPin, Users2 } from "lucide-react";
+import { Building2, Calendar, MapPin, Users2, HardHat } from "lucide-react";
+import Link from "next/link";
 
 interface ProjectHeaderProps {
   projectId: string;
@@ -32,6 +33,12 @@ export function ProjectHeader({ projectId }: ProjectHeaderProps) {
             <Users2 className="h-4 w-4 mr-2" />
             12 miembros
           </Button>
+          <Link href={`/projects/${projectId}/schedule`}>
+            <Button variant="default">
+              <HardHat className="h-4 w-4 mr-2" />
+              Gestión de Obra
+            </Button>
+          </Link>
         </div>
       </div>
     </Card>

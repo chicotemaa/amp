@@ -19,7 +19,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { cn } from "@/lib/utils";
 
 export function ClientInteractionDialog() {
-  const [date, setDate] = useState<Date>();
+  const [date, setDate] = useState<Date | undefined>();
 
   return (
     <Dialog>
@@ -63,7 +63,7 @@ export function ClientInteractionDialog() {
                 <Calendar
                   mode="single"
                   selected={date}
-                  onSelect={setDate}
+                  onSelect={(day) => setDate(day ?? undefined)} // Aseguramos que el valor pueda ser 'undefined'
                   initialFocus
                 />
               </PopoverContent>

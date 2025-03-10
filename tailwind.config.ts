@@ -64,8 +64,9 @@ const config: Config = {
         sm: 'calc(var(--radius) - 4px)',
       },
       fontFamily: {
-        sans: ['var(--font-inter)', 'sans-serif'],
-        montserrat: ['var(--font-montserrat)', 'sans-serif'],
+        montserrat: ['Montserrat', 'sans-serif'],
+        roboto: ['Roboto', 'sans-serif'],
+        sans: ['Montserrat', 'Roboto', 'sans-serif'], // Puedes ajustar el orden según prefieras
       },
       keyframes: {
         'accordion-down': {

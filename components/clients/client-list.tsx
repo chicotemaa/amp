@@ -11,13 +11,7 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { 
-  MoreVertical, 
-  Mail, 
-  Phone, 
-  MessageSquare,
-  FileText
-} from "lucide-react";
+import { MoreVertical, Mail, Phone, MessageSquare, FileText } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -25,7 +19,23 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
-const clients = [
+interface Client {
+  name: string;
+  company: string;
+  email: string;
+  phone: string;
+  projects: number;
+  lastInteraction: string;
+  status: string;
+  notificationPrefs: string[];
+  avatar: string;
+}
+
+interface ClientListProps {
+  filters: { searchTerm: string; status: string; sortOrder: string };
+}
+
+const clients: Client[] = [
   {
     name: "Sara Martínez",
     company: "Espacios Modernos S.L.",
@@ -55,13 +65,20 @@ const clients = [
     phone: "+34 634 567 890",
     projects: 1,
     lastInteraction: "2024-03-10",
-    status: "Nuevo",
+    status: "Potencial",
     notificationPrefs: ["email", "push"],
     avatar: "/avatars/elena.jpg",
   },
 ];
 
-export function ClientList() {
+export function ClientList({ filters }: ClientListProps) {
+  const filteredClients = clients.filter((client) => {
+    const matchesSearch = client.name.toLowerCase().includes(filters.searchTerm.toLowerCase()) ||
+      client.company.toLowerCase().includes(filters.searchTerm.toLowerCase());
+    const matchesStatus = filters.status === "all" || client.status.toLowerCase() === filters.status.toLowerCase();
+    return matchesSearch && matchesStatus;
+  });
+
   return (
     <div className="rounded-md border">
       <Table>
@@ -77,7 +94,7 @@ export function ClientList() {
           </TableRow>
         </TableHeader>
         <TableBody>
-          {clients.map((client) => (
+          {filteredClients.map((client) => (
             <TableRow key={client.email}>
               <TableCell>
                 <div className="flex items-center gap-3">

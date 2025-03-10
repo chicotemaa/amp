@@ -1,34 +1,32 @@
-import { Metadata } from "next";
-import { ClientList } from "@/components/clients/client-list";
-import { ClientStats } from "@/components/clients/client-stats";
-import { ClientFilters } from "@/components/clients/client-filters";
-import { Button } from "@/components/ui/button";
-import { PlusCircle } from "lucide-react";
+"use client";
 
-export const metadata: Metadata = {
-  title: "Clientes | ArchiPro",
-  description: "Gestión de clientes y relaciones",
-};
+import { useState } from "react";
+import { ClientFilters } from "@/components/clients/client-filters";
+import { ClientList } from "@/components/clients/client-list";
+import { ClientInteractionDialog } from "@/components/clients/client-interaction-dialog";
+import { NewClientDialog } from "@/components/clients/new-client-dialog";
+import { ClientStats } from "@/components/clients/client-stats";
 
 export default function ClientsPage() {
+  const [filters, setFilters] = useState({
+    searchTerm: "",
+    status: "all",
+    sortOrder: "recent",
+  });
+
+  const handleFilterChange = (newFilters: { searchTerm: string; status: string; sortOrder: string }) => {
+    setFilters(newFilters);
+  };
+
   return (
     <div className="flex flex-col gap-8">
       <div className="flex items-center justify-between">
-        <div>
-          <h1 className="font-montserrat text-3xl font-bold tracking-tight">Clientes</h1>
-          <p className="text-muted-foreground mt-2">
-            Gestiona y monitorea las relaciones con los clientes
-          </p>
-        </div>
-        <Button className="flex items-center gap-2">
-          <PlusCircle className="h-4 w-4" />
-          Nuevo Cliente
-        </Button>
+        <h1 className="text-3xl font-bold">Clientes</h1>
+        <NewClientDialog />
       </div>
-
-      <ClientStats />
-      <ClientFilters />
-      <ClientList />
+      <ClientStats/>
+      <ClientFilters onFilterChange={handleFilterChange} />
+      <ClientList filters={filters} />
     </div>
   );
 }
