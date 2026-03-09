@@ -63,6 +63,39 @@ export interface Database {
         };
         Relationships: [];
       };
+      profiles: {
+        Row: {
+          id: string;
+          role: Database["public"]["Enums"]["role_type"];
+          full_name: string | null;
+          employee_id: number | null;
+          client_id: number | null;
+          is_active: boolean;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id: string;
+          role: Database["public"]["Enums"]["role_type"];
+          full_name?: string | null;
+          employee_id?: number | null;
+          client_id?: number | null;
+          is_active?: boolean;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          role?: Database["public"]["Enums"]["role_type"];
+          full_name?: string | null;
+          employee_id?: number | null;
+          client_id?: number | null;
+          is_active?: boolean;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
       documents: {
         Row: {
           id: string;
@@ -594,7 +627,9 @@ export interface Database {
     };
     Views: Record<string, never>;
     Functions: Record<string, never>;
-    Enums: Record<string, never>;
+    Enums: {
+      role_type: "operator" | "pm" | "inspector" | "client";
+    };
     CompositeTypes: Record<string, never>;
   };
 }

@@ -27,8 +27,8 @@ create table if not exists public.profiles (
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
   constraint profiles_role_owner_check check (
-    (role in ('operator', 'pm', 'inspector') and employee_id is not null)
-    or (role = 'client' and client_id is not null)
+    (role in ('operator', 'pm', 'inspector') and client_id is null)
+    or (role = 'client' and employee_id is null)
   )
 );
 
@@ -160,4 +160,3 @@ end $$;
 -- After creating users in Supabase Auth, set their final role and owner reference:
 --   update public.profiles set role='operator', employee_id=5 where id='<auth_user_uuid>';
 --   update public.profiles set role='client', client_id=2 where id='<auth_user_uuid>';
-

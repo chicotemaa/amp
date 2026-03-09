@@ -35,11 +35,13 @@ import { cn } from "@/lib/utils";
 import { useEffect, useMemo, useState } from "react";
 import { getSupabaseAuthBrowserClient } from "@/lib/supabase/auth-browser";
 import type { User } from "@supabase/supabase-js";
+import type { AppRole } from "@/lib/auth/roles";
 
 export default function Header() {
   const pathname = usePathname();
   const router = useRouter();
   const [user, setUser] = useState<User | null>(null);
+  const [role, setRole] = useState<AppRole | null>(null);
   const supabase = useMemo(() => getSupabaseAuthBrowserClient(), []);
 
   useEffect(() => {
@@ -48,18 +50,29 @@ export default function Header() {
         data: { user: currentUser },
       } = await supabase.auth.getUser();
       setUser(currentUser);
+      if (currentUser) {
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("role")
+          .eq("id", currentUser.id)
+          .single();
+        setRole((profile?.role as AppRole | undefined) ?? null);
+      } else {
+        setRole(null);
+      }
     };
 
     void loadUser();
 
     const { data: authListener } = supabase.auth.onAuthStateChange((_event, session) => {
       setUser(session?.user ?? null);
+      if (!session?.user) setRole(null);
     });
 
     return () => {
       authListener.subscription.unsubscribe();
     };
-  }, [supabase.auth]);
+  }, [supabase]);
 
   const handleSignOut = async () => {
     await supabase.auth.signOut();
@@ -109,6 +122,15 @@ export default function Header() {
     }
   ];
 
+  const visibleMenuItems = menuItems.filter((item) => {
+    if (role === "client") return false;
+    if (role === "pm" && item.href === "/cashflow") return false;
+    if (role === "inspector" && ["/cashflow", "/clients", "/employees", "/reports"].includes(item.href)) {
+      return false;
+    }
+    return true;
+  });
+
   const Logo = () => (
     <Link href="/" className="flex items-center space-x-2">
       <Building2 className="h-6 w-6 text-primary" />
@@ -121,7 +143,7 @@ export default function Header() {
 
   const NavLinks = ({ className, onItemClick }: { className?: string, onItemClick?: () => void }) => (
     <nav className={className}>
-      {menuItems.map((item) => {
+      {visibleMenuItems.map((item) => {
         const Icon = item.icon;
         return (
           <Link

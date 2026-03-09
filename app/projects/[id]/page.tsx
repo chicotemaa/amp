@@ -7,6 +7,8 @@ import { ProgressReport } from "@/components/projects/project-detail/progress-re
 import { BudgetModule } from "@/components/projects/budget/budget-module";
 import { DocumentsModule } from "@/components/projects/documents/documents-module";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { getCurrentRoleServer } from "@/lib/supabase/auth-server";
+import { canAccessBudget, isFieldRole } from "@/lib/auth/roles";
 
 export const metadata: Metadata = {
   title: "Detalle de Proyecto | ArquiManagerPro",
@@ -24,17 +26,21 @@ export async function generateStaticParams() {
   ];
 }
 
-export default function ProjectDetailPage({ params }: { params: { id: string } }) {
+export default async function ProjectDetailPage({ params }: { params: { id: string } }) {
+  const role = await getCurrentRoleServer();
+  const showBudget = canAccessBudget(role);
+  const prioritizeFieldOps = isFieldRole(role);
+
   return (
     <div className="container mx-auto py-8">
       <ProjectHeader projectId={params.id} />
-      <Tabs defaultValue="overview" className="mt-8">
+      <Tabs defaultValue={prioritizeFieldOps ? "progress" : "overview"} className="mt-8">
         <TabsList className="flex-wrap h-auto gap-1">
           <TabsTrigger value="overview">Resumen</TabsTrigger>
           <TabsTrigger value="timeline">Cronograma</TabsTrigger>
           <TabsTrigger value="team">Equipo</TabsTrigger>
           <TabsTrigger value="documents">Documentos</TabsTrigger>
-          <TabsTrigger value="budget">Presupuesto</TabsTrigger>
+          {showBudget ? <TabsTrigger value="budget">Presupuesto</TabsTrigger> : null}
           <TabsTrigger value="progress">Avance</TabsTrigger>
         </TabsList>
         <TabsContent value="overview">
@@ -49,9 +55,11 @@ export default function ProjectDetailPage({ params }: { params: { id: string } }
         <TabsContent value="documents">
           <DocumentsModule projectId={params.id} />
         </TabsContent>
-        <TabsContent value="budget">
-          <BudgetModule projectId={params.id} />
-        </TabsContent>
+        {showBudget ? (
+          <TabsContent value="budget">
+            <BudgetModule projectId={params.id} />
+          </TabsContent>
+        ) : null}
         <TabsContent value="progress">
           <ProgressReport projectId={params.id} />
         </TabsContent>
