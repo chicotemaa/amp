@@ -7,11 +7,13 @@ import { BudgetChart } from "./budget-chart";
 import { BudgetItemsTable } from "./budget-items-table";
 import { BudgetVersionHistory } from "./budget-version-history";
 import { BudgetPdfExport } from "./budget-pdf-export";
+import { BudgetCoordinationPanel } from "./budget-coordination-panel";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { DollarSign } from "lucide-react";
 import { getBudgetsByProject, saveBudgetVersion } from "@/lib/api/budgets";
 
@@ -139,27 +141,44 @@ export function BudgetModule({ projectId }: BudgetModuleProps) {
                 <BudgetPdfExport version={activeVersion} projectId={projectId} />
             </div>
 
-            {/* KPI Stats */}
-            <BudgetStats items={activeVersion.items} />
+            <Tabs defaultValue="technical" className="space-y-4">
+                <TabsList>
+                    <TabsTrigger value="technical">Presupuesto Técnico</TabsTrigger>
+                    <TabsTrigger value="coordination">Coordinación Económica</TabsTrigger>
+                </TabsList>
 
-            {/* Chart + Version History */}
-            <div className="grid gap-6 lg:grid-cols-2">
-                <BudgetChart items={activeVersion.items} />
-                <BudgetVersionHistory
-                    versions={versions}
-                    activeVersionId={activeVersionId}
-                    onActivate={setActiveVersionId}
-                    onNewVersion={() => setNewVersionDialog(true)}
-                />
-            </div>
+                <TabsContent value="technical" className="space-y-6">
+                    {/* KPI Stats */}
+                    <BudgetStats items={activeVersion.items} />
 
-            {/* Items Table */}
-            <BudgetItemsTable
-                items={activeVersion.items}
-                onAdd={handleAddItem}
-                onEdit={handleEditItem}
-                onDelete={handleDeleteItem}
-            />
+                    {/* Chart + Version History */}
+                    <div className="grid gap-6 lg:grid-cols-2">
+                        <BudgetChart items={activeVersion.items} />
+                        <BudgetVersionHistory
+                            versions={versions}
+                            activeVersionId={activeVersionId}
+                            onActivate={setActiveVersionId}
+                            onNewVersion={() => setNewVersionDialog(true)}
+                        />
+                    </div>
+
+                    {/* Items Table */}
+                    <BudgetItemsTable
+                        items={activeVersion.items}
+                        onAdd={handleAddItem}
+                        onEdit={handleEditItem}
+                        onDelete={handleDeleteItem}
+                    />
+                </TabsContent>
+
+                <TabsContent value="coordination">
+                    <BudgetCoordinationPanel
+                        projectId={projectId}
+                        items={activeVersion.items}
+                        onAddBudgetItem={handleAddItem}
+                    />
+                </TabsContent>
+            </Tabs>
 
             {/* New Version Dialog */}
             <Dialog open={newVersionDialog} onOpenChange={setNewVersionDialog}>
