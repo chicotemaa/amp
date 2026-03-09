@@ -19,6 +19,14 @@ const DEPT_COLORS: Record<string, string> = {
   Gestión: "#8b5cf6",     // Violet
 };
 
+// Colors for the chart segments (slightly more opaque if needed)
+const CHART_COLORS: Record<string, string> = {
+  Diseño: "#2563eb",
+  Ingeniería: "#d97706",
+  Construcción: "#059669",
+  Gestión: "#7c3aed",
+};
+
 export function ResourceUtilization() {
   const resources = getResourceUtilization();
 
@@ -27,8 +35,11 @@ export function ResourceUtilization() {
     datasets: [
       {
         data: resources.map((r) => r.percentage),
-        backgroundColor: resources.map((r) => DEPT_COLORS[r.department] ?? "#888"),
-        borderWidth: 1,
+        backgroundColor: resources.map((r) => CHART_COLORS[r.department] ?? "#888"),
+        hoverBackgroundColor: resources.map((r) => DEPT_COLORS[r.department] ?? "#888"),
+        borderColor: "rgba(255, 255, 255, 0.2)",
+        borderWidth: 2,
+        hoverOffset: 4,
       },
     ],
   };
