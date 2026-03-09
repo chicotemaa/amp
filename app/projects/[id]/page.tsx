@@ -9,6 +9,8 @@ import { DocumentsModule } from "@/components/projects/documents/documents-modul
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { getCurrentRoleServer } from "@/lib/supabase/auth-server";
 import { canAccessBudget, isFieldRole } from "@/lib/auth/roles";
+import { DailyProgressForm } from "@/components/projects/project-detail/daily-progress-form";
+import { IncidentReporter } from "@/components/projects/project-detail/incident-reporter";
 
 export const metadata: Metadata = {
   title: "Detalle de Proyecto | ArquiManagerPro",
@@ -61,7 +63,17 @@ export default async function ProjectDetailPage({ params }: { params: { id: stri
           </TabsContent>
         ) : null}
         <TabsContent value="progress">
-          <ProgressReport projectId={params.id} />
+          {prioritizeFieldOps ? (
+            <div className="grid gap-6 lg:grid-cols-2">
+              <DailyProgressForm projectId={params.id} />
+              <IncidentReporter projectId={params.id} />
+              <div className="lg:col-span-2">
+                <ProgressReport projectId={params.id} />
+              </div>
+            </div>
+          ) : (
+            <ProgressReport projectId={params.id} />
+          )}
         </TabsContent>
       </Tabs>
     </div>
