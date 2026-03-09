@@ -1,38 +1,14 @@
 "use client";
 
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-
-const recentClients = [
-  {
-    name: "Carlos Rodríguez",
-    email: "carlos@ejemplo.com",
-    project: "Edificio Residencial Norte",
-    avatar: "/avatars/01.png",
-    initials: "CR",
-  },
-  {
-    name: "María González",
-    email: "maria@ejemplo.com",
-    project: "Centro Comercial Este",
-    avatar: "/avatars/02.png",
-    initials: "MG",
-  },
-  {
-    name: "Juan Pérez",
-    email: "juan@ejemplo.com",
-    project: "Complejo Deportivo Sur",
-    avatar: "/avatars/03.png",
-    initials: "JP",
-  },
-];
+import { Badge } from "@/components/ui/badge";
+import { getRecentClients } from "@/lib/api/clients";
+import { getProjectById } from "@/lib/api/projects";
 
 export function RecentClients() {
+  const clients = getRecentClients(3);
+
   return (
     <Card>
       <CardHeader>
@@ -40,21 +16,36 @@ export function RecentClients() {
       </CardHeader>
       <CardContent>
         <div className="space-y-4">
-          {recentClients.map((client) => (
-            <div
-              key={client.email}
-              className="flex items-center space-x-4"
-            >
-              <Avatar>
-                <AvatarImage src={client.avatar} alt={client.name} />
-                <AvatarFallback>{client.initials}</AvatarFallback>
-              </Avatar>
-              <div className="flex-1 space-y-1">
-                <p className="text-sm font-medium">{client.name}</p>
-                <p className="text-xs text-muted-foreground">{client.project}</p>
+          {clients.map((client) => {
+            const lastProject = client.projectIds.length > 0
+              ? getProjectById(client.projectIds[client.projectIds.length - 1])
+              : null;
+            const initials = client.name
+              .split(" ")
+              .map((n) => n[0])
+              .join("");
+
+            return (
+              <div key={client.email} className="flex items-center space-x-4">
+                <Avatar>
+                  <AvatarImage src={client.avatar} alt={client.name} />
+                  <AvatarFallback>{initials}</AvatarFallback>
+                </Avatar>
+                <div className="flex-1 space-y-0.5 min-w-0">
+                  <p className="text-sm font-medium">{client.name}</p>
+                  <p className="text-xs text-muted-foreground truncate">
+                    {lastProject?.name ?? client.company}
+                  </p>
+                </div>
+                <Badge
+                  variant={client.status === "Activo" ? "default" : "secondary"}
+                  className="shrink-0 text-xs"
+                >
+                  {client.status}
+                </Badge>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </CardContent>
     </Card>

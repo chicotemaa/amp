@@ -1,24 +1,18 @@
 "use client";
 
+/**
+ * Fondo decorativo sutil — sin cuadriculado.
+ * Solo usamos blobs de color con blur para un look moderno y limpio.
+ */
 export function BackgroundPattern() {
   return (
     <>
-      {/* Patrón de fondo con polígonos */}
-      <div className="fixed inset-0 -z-10 opacity-[0.02] dark:opacity-[0.05]">
-        <div className="absolute top-0 left-0 w-full h-full bg-repeat pattern-grid" />
-      </div>
-      
-      {/* Polígonos decorativos */}
-      <div className="fixed top-1/4 -left-48 w-96 h-96 bg-primary/10 rounded-3xl rotate-12 blur-3xl" />
-      <div className="fixed top-3/4 -right-48 w-96 h-96 bg-primary/10 rounded-3xl -rotate-12 blur-3xl" />
-      
-      {/* Gradiente superior */}
-      <div className="fixed top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
-      
-      {/* Efecto de malla poligonal */}
-      <div className="fixed inset-0 -z-10">
-        <div className="absolute inset-0 bg-[linear-gradient(to_right,#8080800a_1px,transparent_1px),linear-gradient(to_bottom,#8080800a_1px,transparent_1px)] bg-[size:24px_24px]" />
-      </div>
+      {/* Blob superior izquierdo */}
+      <div className="fixed -top-32 -left-32 w-[500px] h-[500px] rounded-full bg-primary/8 blur-[100px] -z-10 pointer-events-none" />
+      {/* Blob inferior derecho */}
+      <div className="fixed -bottom-32 -right-32 w-[500px] h-[500px] rounded-full bg-secondary/8 blur-[100px] -z-10 pointer-events-none" />
+      {/* Línea gradiente superior */}
+      <div className="fixed top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-primary/15 to-transparent -z-10 pointer-events-none" />
     </>
   );
 }

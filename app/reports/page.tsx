@@ -11,7 +11,7 @@ import { ProjectTimeline } from "@/components/reports/project-timeline";
 import { ResourceUtilization } from "@/components/reports/resource-utilization";
 
 export const metadata: Metadata = {
-  title: "Informes | ArchiPro",
+  title: "Informes | ArquiManagerPro",
   description: "Panel de análisis e informes de proyectos",
 };
 

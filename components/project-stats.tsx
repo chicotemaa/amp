@@ -5,45 +5,11 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Building2, Clock, AlertTriangle, CheckCircle2 } from "lucide-react";
-
-const projectStatuses = {
-  active: {
-    count: 12,
-    change: "+2",
-    details: {
-      onTrack: 8,
-      delayed: 3,
-      critical: 1
-    }
-  },
-  completed: {
-    count: 45,
-    change: "+5",
-    details: {
-      onBudget: 38,
-      overBudget: 7
-    }
-  },
-  upcoming: {
-    count: 6,
-    change: "+1",
-    details: {
-      inPlanning: 4,
-      readyToStart: 2
-    }
-  },
-  issues: {
-    count: 4,
-    change: "-2",
-    details: {
-      minor: 2,
-      major: 1,
-      critical: 1
-    }
-  }
-};
+import { getProjectStats } from "@/lib/api/projects";
 
 export function ProjectStats() {
+  const stats = getProjectStats();
+
   return (
     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
       <Card>
@@ -52,22 +18,20 @@ export function ProjectStats() {
           <Building2 className="h-4 w-4 text-muted-foreground" />
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-bold">{projectStatuses.active.count}</div>
-          <p className="text-xs text-muted-foreground">
-            {projectStatuses.active.change} desde el mes pasado
-          </p>
+          <div className="text-2xl font-bold">{stats.active.count}</div>
+          <p className="text-xs text-muted-foreground">En ejecución</p>
           <div className="mt-3 text-xs space-y-1">
             <div className="flex justify-between">
               <span>En Tiempo</span>
-              <span className="text-green-500">{projectStatuses.active.details.onTrack}</span>
+              <span className="text-green-500">{stats.active.onTrack}</span>
             </div>
             <div className="flex justify-between">
               <span>Con Retraso</span>
-              <span className="text-yellow-500">{projectStatuses.active.details.delayed}</span>
+              <span className="text-yellow-500">{stats.active.delayed}</span>
             </div>
             <div className="flex justify-between">
               <span>Críticos</span>
-              <span className="text-red-500">{projectStatuses.active.details.critical}</span>
+              <span className="text-red-500">{stats.active.critical}</span>
             </div>
           </div>
         </CardContent>
@@ -79,18 +43,16 @@ export function ProjectStats() {
           <CheckCircle2 className="h-4 w-4 text-muted-foreground" />
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-bold">{projectStatuses.completed.count}</div>
-          <p className="text-xs text-muted-foreground">
-            {projectStatuses.completed.change} desde el mes pasado
-          </p>
+          <div className="text-2xl font-bold">{stats.completed.count}</div>
+          <p className="text-xs text-muted-foreground">Proyectos finalizados</p>
           <div className="mt-3 text-xs space-y-1">
             <div className="flex justify-between">
               <span>En Presupuesto</span>
-              <span className="text-green-500">{projectStatuses.completed.details.onBudget}</span>
+              <span className="text-green-500">{stats.completed.onBudget}</span>
             </div>
             <div className="flex justify-between">
               <span>Sobre Presupuesto</span>
-              <span className="text-yellow-500">{projectStatuses.completed.details.overBudget}</span>
+              <span className="text-yellow-500">{stats.completed.overBudget}</span>
             </div>
           </div>
         </CardContent>
@@ -102,18 +64,16 @@ export function ProjectStats() {
           <Clock className="h-4 w-4 text-muted-foreground" />
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-bold">{projectStatuses.upcoming.count}</div>
-          <p className="text-xs text-muted-foreground">
-            {projectStatuses.upcoming.change} desde el mes pasado
-          </p>
+          <div className="text-2xl font-bold">{stats.upcoming.count}</div>
+          <p className="text-xs text-muted-foreground">En planificación</p>
           <div className="mt-3 text-xs space-y-1">
             <div className="flex justify-between">
               <span>En Planificación</span>
-              <span className="text-blue-500">{projectStatuses.upcoming.details.inPlanning}</span>
+              <span className="text-blue-500">{stats.upcoming.inPlanning}</span>
             </div>
             <div className="flex justify-between">
               <span>Listos para Iniciar</span>
-              <span className="text-green-500">{projectStatuses.upcoming.details.readyToStart}</span>
+              <span className="text-green-500">{stats.upcoming.readyToStart}</span>
             </div>
           </div>
         </CardContent>
@@ -125,22 +85,20 @@ export function ProjectStats() {
           <AlertTriangle className="h-4 w-4 text-muted-foreground" />
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-bold">{projectStatuses.issues.count}</div>
-          <p className="text-xs text-muted-foreground">
-            {projectStatuses.issues.change} desde el mes pasado
-          </p>
+          <div className="text-2xl font-bold">{stats.issues.count}</div>
+          <p className="text-xs text-muted-foreground">Requieren atención</p>
           <div className="mt-3 text-xs space-y-1">
             <div className="flex justify-between">
               <span>Menores</span>
-              <span className="text-yellow-500">{projectStatuses.issues.details.minor}</span>
+              <span className="text-yellow-500">{stats.issues.minor}</span>
             </div>
             <div className="flex justify-between">
               <span>Mayores</span>
-              <span className="text-orange-500">{projectStatuses.issues.details.major}</span>
+              <span className="text-orange-500">{stats.issues.major}</span>
             </div>
             <div className="flex justify-between">
               <span>Críticas</span>
-              <span className="text-red-500">{projectStatuses.issues.details.critical}</span>
+              <span className="text-red-500">{stats.issues.critical}</span>
             </div>
           </div>
         </CardContent>

@@ -29,14 +29,16 @@ import {
 } from "@/components/ui/sheet";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ThemeToggle } from "@/components/theme-toggle";
-import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 
 export default function Header() {
-  const [notifications] = useState(3);
   const pathname = usePathname();
+
+  if (pathname === "/login") {
+    return null;
+  }
 
   const menuItems = [
     {

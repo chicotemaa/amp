@@ -8,48 +8,31 @@ import {
   Legend,
   ChartData,
 } from "chart.js";
+import { getResourceUtilization } from "@/lib/api/employees";
 
 ChartJS.register(ArcElement, Tooltip, Legend);
 
-const resourceData = {
-  architecture: {
-    percentage: 35,
-    hours: 560,
-    team: 12,
-    color: "hsl(var(--success))",
-  },
-  interior: {
-    percentage: 25,
-    hours: 400,
-    team: 8,
-    color: "hsl(var(--warning))",
-  },
-  engineering: {
-    percentage: 20,
-    hours: 320,
-    team: 6,
-    color: "hsl(var(--primary))",
-  },
-  management: {
-    percentage: 20,
-    hours: 320,
-    team: 4,
-    color: "hsl(var(--secondary))",
-  },
-};
-
-const data: ChartData<"doughnut"> = {
-  labels: ["Arquitectura", "Diseño Interior", "Ingeniería", "Gestión de Proyectos"],
-  datasets: [
-    {
-      data: Object.values(resourceData).map(r => r.percentage),
-      backgroundColor: Object.values(resourceData).map(r => r.color),
-      borderWidth: 1,
-    },
-  ],
+const DEPT_COLORS: Record<string, string> = {
+  Diseño: "hsl(var(--success))",
+  Ingeniería: "hsl(var(--warning))",
+  Construcción: "hsl(var(--primary))",
+  Gestión: "hsl(var(--secondary))",
 };
 
 export function ResourceUtilization() {
+  const resources = getResourceUtilization();
+
+  const data: ChartData<"doughnut"> = {
+    labels: resources.map((r) => r.label),
+    datasets: [
+      {
+        data: resources.map((r) => r.percentage),
+        backgroundColor: resources.map((r) => DEPT_COLORS[r.department] ?? "#888"),
+        borderWidth: 1,
+      },
+    ],
+  };
+
   return (
     <div className="space-y-6">
       <div className="h-[300px] flex items-center justify-center">
@@ -58,28 +41,23 @@ export function ResourceUtilization() {
           options={{
             responsive: true,
             maintainAspectRatio: false,
-            plugins: {
-              legend: {
-                position: "bottom",
-              },
-            },
+            plugins: { legend: { position: "bottom" } },
           }}
         />
       </div>
-      
+
       <div className="grid grid-cols-2 gap-4 text-sm">
-        {Object.entries(resourceData).map(([key, value]) => (
-          <div key={key} className="space-y-1 p-4 rounded-lg" style={{ backgroundColor: `${value.color}15` }}>
-            <div className="font-medium">
-              {key === "architecture" && "Arquitectura"}
-              {key === "interior" && "Diseño Interior"}
-              {key === "engineering" && "Ingeniería"}
-              {key === "management" && "Gestión"}
-            </div>
-            <div className="text-muted-foreground">
-              <div>{value.percentage}% de utilización</div>
-              <div>{value.hours} horas asignadas</div>
-              <div>{value.team} miembros del equipo</div>
+        {resources.map((r) => (
+          <div
+            key={r.department}
+            className="space-y-1 p-4 rounded-lg"
+            style={{ backgroundColor: `${DEPT_COLORS[r.department]}20` }}
+          >
+            <div className="font-medium">{r.label}</div>
+            <div className="text-muted-foreground space-y-0.5">
+              <div>{r.percentage}% del equipo</div>
+              <div>{r.hoursAssigned} horas asignadas</div>
+              <div>{r.count} {r.count === 1 ? "miembro" : "miembros"}</div>
             </div>
           </div>
         ))}
