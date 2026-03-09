@@ -2,162 +2,219 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ── Google Fonts ─────────────────────────────────────────── */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Montserrat:wght@600;700;800&display=swap');
+
 :root {
-  /* Modo Día - Colores Base */
-  --background: 220 33% 98%;
-  --foreground: 220 10% 18%;
-  
-  /* Colores Primarios */
-  --primary: 200 50% 75%;
-  --primary-foreground: 220 10% 18%;
-  
-  /* Colores Secundarios */
-  --secondary: 170 35% 80%;
-  --secondary-foreground: 220 10% 18%;
-  
-  /* Colores de Apoyo */
-  --muted: 260 20% 85%;
-  --muted-foreground: 220 10% 45%;
-  
-  /* Estados y Alertas */
-  --success: 160 35% 80%;
-  --warning: 45 100% 85%;
-  --error: 0 65% 85%;
-  
-  /* Elementos de Interfaz */
+  /* ── Background & Foreground ─────────────────────────────── */
+  --background: 220 30% 97%;
+  --foreground: 222 20% 16%;
+
+  /* ── Primary (azul arquitectónico) ──────────────────────── */
+  --primary: 210 65% 52%;
+  --primary-foreground: 0 0% 100%;
+
+  /* ── Secondary (teal) ────────────────────────────────────── */
+  --secondary: 175 40% 45%;
+  --secondary-foreground: 0 0% 100%;
+
+  /* ── Muted ───────────────────────────────────────────────── */
+  --muted: 220 14% 92%;
+  --muted-foreground: 220 10% 46%;
+
+  /* ── Accent ──────────────────────────────────────────────── */
+  --accent: 220 14% 92%;
+  --accent-foreground: 222 20% 16%;
+
+  /* ── Status ──────────────────────────────────────────────── */
+  --success: 142 72% 29%;
+  --warning: 38 92% 50%;
+  --error: 0 84% 60%;
+  --destructive: 0 84% 60%;
+  --destructive-foreground: 0 0% 100%;
+
+  /* ── Cards / Popovers ────────────────────────────────────── */
   --card: 0 0% 100%;
-  --card-foreground: 220 10% 18%;
+  --card-foreground: 222 20% 16%;
   --popover: 0 0% 100%;
-  --popover-foreground: 220 10% 18%;
-  --border: 220 13% 90%;
-  --input: 220 13% 90%;
-  
-  /* Gráficos */
-  --chart-1: 200 50% 75%;
-  --chart-2: 170 35% 80%;
-  --chart-3: 260 20% 85%;
-  --chart-4: 45 100% 85%;
-  --chart-5: 0 65% 85%;
-  
-  --radius: 0.5rem;
+  --popover-foreground: 222 20% 16%;
+
+  /* ── Borders & Inputs ────────────────────────────────────── */
+  --border: 220 13% 88%;
+  --input: 220 13% 88%;
+  --ring: 210 65% 52%;
+
+  /* ── Charts ──────────────────────────────────────────────── */
+  --chart-1: 210 65% 52%;
+  --chart-2: 175 40% 45%;
+  --chart-3: 38 92% 50%;
+  --chart-4: 142 72% 29%;
+  --chart-5: 0 84% 60%;
+
+  --radius: 0.625rem;
 }
 
 .dark {
-  /* Modo Noche - Colores Base */
-  --background: 220 35% 13%;
-  --foreground: 0 0% 95%;
-  
-  /* Colores Primarios */
-  --primary: 200 35% 50%;
-  --primary-foreground: 0 0% 95%;
-  
-  /* Colores Secundarios */
-  --secondary: 180 35% 38%;
-  --secondary-foreground: 0 0% 95%;
-  
-  /* Colores de Apoyo */
-  --muted: 215 25% 27%;
-  --muted-foreground: 220 10% 75%;
-  
-  /* Estados y Alertas */
-  --success: 160 35% 35%;
-  --warning: 45 70% 75%;
-  --error: 0 65% 45%;
-  
-  /* Elementos de Interfaz */
-  --card: 220 35% 15%;
-  --card-foreground: 0 0% 95%;
-  --popover: 220 35% 15%;
-  --popover-foreground: 0 0% 95%;
-  --border: 215 25% 27%;
-  --input: 215 25% 27%;
-  
-  /* Gráficos */
-  --chart-1: 200 35% 50%;
-  --chart-2: 180 35% 38%;
-  --chart-3: 215 25% 27%;
-  --chart-4: 45 70% 75%;
-  --chart-5: 0 65% 45%;
+  /* ── Background & Foreground ─────────────────────────────── */
+  --background: 222 30% 11%;
+  --foreground: 210 20% 94%;
+
+  /* ── Primary ─────────────────────────────────────────────── */
+  --primary: 210 60% 60%;
+  --primary-foreground: 222 30% 8%;
+
+  /* ── Secondary ───────────────────────────────────────────── */
+  --secondary: 175 35% 42%;
+  --secondary-foreground: 210 20% 94%;
+
+  /* ── Muted ───────────────────────────────────────────────── */
+  --muted: 222 20% 20%;
+  --muted-foreground: 220 10% 60%;
+
+  /* ── Accent ──────────────────────────────────────────────── */
+  --accent: 222 20% 20%;
+  --accent-foreground: 210 20% 94%;
+
+  /* ── Status ──────────────────────────────────────────────── */
+  --success: 142 60% 40%;
+  --warning: 38 85% 55%;
+  --error: 0 70% 55%;
+  --destructive: 0 62% 50%;
+  --destructive-foreground: 0 0% 100%;
+
+  /* ── Cards / Popovers ────────────────────────────────────── */
+  --card: 222 28% 14%;
+  --card-foreground: 210 20% 94%;
+  --popover: 222 28% 14%;
+  --popover-foreground: 210 20% 94%;
+
+  /* ── Borders & Inputs ────────────────────────────────────── */
+  --border: 222 20% 22%;
+  --input: 222 20% 22%;
+  --ring: 210 60% 60%;
+
+  /* ── Charts ──────────────────────────────────────────────── */
+  --chart-1: 210 60% 60%;
+  --chart-2: 175 35% 42%;
+  --chart-3: 38 85% 55%;
+  --chart-4: 142 60% 40%;
+  --chart-5: 0 70% 55%;
 }
 
+/* ── Base ──────────────────────────────────────────────────── */
 @layer base {
   * {
     @apply border-border;
+    box-sizing: border-box;
   }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
   body {
     @apply bg-background text-foreground antialiased;
+    font-family: 'Inter', sans-serif;
     font-feature-settings: "rlig" 1, "calt" 1;
+    /* Fondo con gradiente radial suave centrado — sin cuadriculado */
+    background-image:
+      radial-gradient(ellipse 80% 60% at 50% -10%, hsl(210 65% 52% / 0.07), transparent),
+      radial-gradient(ellipse 60% 50% at 90% 100%, hsl(175 40% 45% / 0.05), transparent);
+    min-height: 100vh;
   }
 }
 
+/* ── Components ────────────────────────────────────────────── */
 @layer components {
-  .card-hover {
-    @apply transition-all duration-300 hover:shadow-lg hover:-translate-y-1;
-  }
-  
-  .glass-effect {
-    @apply bg-white/10 backdrop-blur-lg border border-white/20;
-  }
-  
-  .btn-primary {
-    @apply px-4 py-2 rounded-md bg-primary text-primary-foreground hover:bg-primary/90 
-           transition-colors duration-200 font-medium;
-  }
-  
-  .btn-secondary {
-    @apply px-4 py-2 rounded-md bg-secondary text-secondary-foreground hover:bg-secondary/90 
-           transition-colors duration-200 font-medium;
-  }
-  
-  .input-field {
-    @apply px-3 py-2 rounded-md border border-input bg-background hover:border-primary/50 
-           focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all duration-200;
-  }
-  
+
+  /* Cards */
   .card-modern {
-    @apply bg-card text-card-foreground rounded-lg border border-border shadow-sm hover:shadow-md 
-           transition-all duration-200;
+    @apply bg-card text-card-foreground rounded-xl border border-border shadow-sm
+           transition-all duration-200 ease-out
+           hover:shadow-md hover:border-primary/20;
+  }
+
+  .card-hover {
+    @apply transition-all duration-200 ease-out hover:shadow-md hover:-translate-y-0.5;
+  }
+
+  /* Glass */
+  .glass-effect {
+    @apply bg-white/8 backdrop-blur-xl border border-white/12;
+  }
+
+  /* Buttons */
+  .btn-primary {
+    @apply px-4 py-2 rounded-lg bg-primary text-primary-foreground font-medium
+           hover:bg-primary/90 active:scale-[0.98]
+           transition-all duration-150 shadow-sm;
+  }
+
+  .btn-secondary {
+    @apply px-4 py-2 rounded-lg bg-secondary text-secondary-foreground font-medium
+           hover:bg-secondary/90 active:scale-[0.98]
+           transition-all duration-150;
+  }
+
+  /* Inputs */
+  .input-field {
+    @apply px-3 py-2 rounded-lg border border-input bg-background
+           hover:border-primary/40 focus:border-primary focus:ring-2 focus:ring-primary/15
+           outline-none transition-all duration-200;
+  }
+
+  /* Status badges */
+  .badge-status {
+    @apply inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium;
   }
 }
 
-/* Patrones de Fondo */
-.pattern-grid {
-  background-image: 
-    linear-gradient(to right, rgba(128,128,128,0.05) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(128,128,128,0.05) 1px, transparent 1px);
-  background-size: 24px 24px;
+/* ── Utilities ─────────────────────────────────────────────── */
+@layer utilities {
+  .hover-lift {
+    @apply transition-transform duration-200 ease-out hover:-translate-y-0.5;
+  }
+
+  .hover-glow {
+    @apply transition-shadow duration-200 hover:shadow-lg hover:shadow-primary/15;
+  }
+
+  .section-padding {
+    @apply py-8 md:py-12;
+  }
+
+  .content-margin {
+    @apply my-4 md:my-6;
+  }
+
+  /* Montserrat para títulos */
+  .font-montserrat {
+    font-family: 'Montserrat', sans-serif;
+  }
 }
 
-.pattern-dots {
-  background-image: radial-gradient(circle, currentColor 1px, transparent 1px);
-  background-size: 24px 24px;
-  @apply text-primary/5;
-}
-
-/* Animaciones */
+/* ── Animations ────────────────────────────────────────────── */
 @keyframes fadeIn {
-  from { opacity: 0; transform: translateY(-10px); }
-  to { opacity: 1; transform: translateY(0); }
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
 }
 
-.animate-fadeIn {
-  animation: fadeIn 0.3s ease-out forwards;
+@keyframes slideIn {
+  from { opacity: 0; transform: translateX(-8px); }
+  to   { opacity: 1; transform: translateX(0); }
 }
 
-/* Efectos de Hover */
-.hover-lift {
-  @apply transition-transform duration-200 hover:-translate-y-0.5;
+@keyframes scaleIn {
+  from { opacity: 0; transform: scale(0.96); }
+  to   { opacity: 1; transform: scale(1); }
 }
 
-.hover-glow {
-  @apply transition-shadow duration-200 hover:shadow-lg hover:shadow-primary/20;
-}
+.animate-fadeIn  { animation: fadeIn  0.25s ease-out forwards; }
+.animate-slideIn { animation: slideIn 0.2s  ease-out forwards; }
+.animate-scaleIn { animation: scaleIn 0.2s  ease-out forwards; }
 
-/* Utilidades de Espaciado */
-.section-padding {
-  @apply py-8 md:py-12 lg:py-16;
-}
-
-.content-margin {
-  @apply my-4 md:my-6 lg:my-8;
-}
+/* ── Scrollbar (webkit) ────────────────────────────────────── */
+::-webkit-scrollbar        { width: 6px; height: 6px; }
+::-webkit-scrollbar-track  { background: transparent; }
+::-webkit-scrollbar-thumb  { @apply bg-muted rounded-full; }
+::-webkit-scrollbar-thumb:hover { @apply bg-muted-foreground/30; }

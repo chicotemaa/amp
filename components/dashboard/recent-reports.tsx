@@ -1,44 +1,19 @@
 "use client";
 
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-
-const recentReports = [
-  {
-    title: "Avance Estructural",
-    project: "Edificio Residencial Norte",
-    date: "2024-03-15",
-    status: "completed",
-    author: "Ing. Ana Martínez",
-  },
-  {
-    title: "Instalaciones Eléctricas",
-    project: "Centro Comercial Este",
-    date: "2024-03-14",
-    status: "pending",
-    author: "Ing. Roberto Silva",
-  },
-  {
-    title: "Fundaciones",
-    project: "Complejo Deportivo Sur",
-    date: "2024-03-13",
-    status: "in-review",
-    author: "Ing. Luis Torres",
-  },
-];
+import { getRecentReports } from "@/lib/api/reports";
+import { REPORT_STATUS_LABELS } from "@/lib/types/report";
 
 const statusStyles = {
-  completed: "bg-green-500/10 text-green-500",
-  pending: "bg-yellow-500/10 text-yellow-500",
-  "in-review": "bg-blue-500/10 text-blue-500",
+  completed: "bg-green-500/10 text-green-600 border-green-200",
+  pending: "bg-yellow-500/10 text-yellow-600 border-yellow-200",
+  "in-review": "bg-blue-500/10 text-blue-600 border-blue-200",
 };
 
 export function RecentReports() {
+  const reports = getRecentReports(3);
+
   return (
     <Card>
       <CardHeader>
@@ -46,21 +21,19 @@ export function RecentReports() {
       </CardHeader>
       <CardContent>
         <div className="space-y-4">
-          {recentReports.map((report) => (
-            <div
-              key={`${report.project}-${report.date}`}
-              className="flex items-center space-x-4"
-            >
-              <div className="flex-1 space-y-1">
+          {reports.map((report) => (
+            <div key={report.id} className="flex items-center space-x-4">
+              <div className="flex-1 space-y-0.5 min-w-0">
                 <p className="text-sm font-medium">{report.title}</p>
-                <p className="text-xs text-muted-foreground">
-                  {report.project} - {report.author}
+                <p className="text-xs text-muted-foreground truncate">
+                  {report.projectName} · {report.authorName}
                 </p>
               </div>
-              <Badge className={statusStyles[report.status as keyof typeof statusStyles]}>
-                {report.status === "completed" && "Completado"}
-                {report.status === "pending" && "Pendiente"}
-                {report.status === "in-review" && "En Revisión"}
+              <Badge
+                variant="outline"
+                className={`shrink-0 text-xs ${statusStyles[report.status]}`}
+              >
+                {REPORT_STATUS_LABELS[report.status]}
               </Badge>
             </div>
           ))}
