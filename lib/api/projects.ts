@@ -33,6 +33,15 @@ export async function getProjectsDb(): Promise<Project[]> {
     return (data as ProjectRow[]).map(mapProjectRow);
 }
 
+export async function getProjectByIdDb(id: number): Promise<Project | null> {
+    const { data, error } = await supabase.from("projects").select("*").eq("id", id).single();
+    if (error) {
+        console.error("Supabase project error:", error.message);
+        return null;
+    }
+    return mapProjectRow(data as ProjectRow);
+}
+
 /** Get all projects */
 export function getProjects(): Project[] {
     return PROJECTS;

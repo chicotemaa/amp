@@ -2,20 +2,39 @@
 
 import { Card } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import { 
+import {
   BarChart,
   CheckCircle2,
   Clock,
   AlertTriangle
 } from "lucide-react";
-import { getProjectById } from "@/lib/api/projects";
+import { getProjectByIdDb } from "@/lib/api/projects";
+import { Project } from "@/lib/types/project";
+import { useEffect, useState } from "react";
 
 interface ProgressReportProps {
   projectId: string;
 }
 
 export function ProgressReport({ projectId }: ProgressReportProps) {
-  const project = getProjectById(Number(projectId));
+  const [project, setProject] = useState<Project | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    getProjectByIdDb(Number(projectId)).then(p => {
+      setProject(p);
+      setLoading(false);
+    });
+  }, [projectId]);
+
+  if (loading) {
+    return (
+      <Card className="p-6">
+        <p className="text-sm text-muted-foreground">Cargando reporte de progreso...</p>
+      </Card>
+    );
+  }
+
   if (!project) {
     return (
       <Card className="p-6">

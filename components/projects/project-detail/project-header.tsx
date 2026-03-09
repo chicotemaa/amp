@@ -1,20 +1,46 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Building2, Calendar, MapPin, Users2, HardHat } from "lucide-react";
 import Link from "next/link";
-import { getProjectById } from "@/lib/api/projects";
-import { getClientById } from "@/lib/api/clients";
-import { PROJECT_STATUS_LABELS, PROJECT_STATUS_COLORS } from "@/lib/types/project";
+import { getProjectByIdDb } from "@/lib/api/projects";
+import { getClientByIdDb } from "@/lib/api/clients";
+import { PROJECT_STATUS_LABELS, PROJECT_STATUS_COLORS, Project } from "@/lib/types/project";
+import { Client } from "@/lib/types/client";
 
 interface ProjectHeaderProps {
   projectId: string;
 }
 
 export function ProjectHeader({ projectId }: ProjectHeaderProps) {
-  const project = getProjectById(Number(projectId));
+  const [project, setProject] = useState<Project | null>(null);
+  const [client, setClient] = useState<Client | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function load() {
+      setLoading(true);
+      const proj = await getProjectByIdDb(Number(projectId));
+      setProject(proj);
+      if (proj && proj.clientId) {
+        const cli = await getClientByIdDb(proj.clientId);
+        setClient(cli);
+      }
+      setLoading(false);
+    }
+    load();
+  }, [projectId]);
+
+  if (loading) {
+    return (
+      <Card className="p-6">
+        <p className="text-muted-foreground text-sm">Cargando cabecera de proyecto...</p>
+      </Card>
+    );
+  }
 
   if (!project) {
     return (
@@ -23,8 +49,6 @@ export function ProjectHeader({ projectId }: ProjectHeaderProps) {
       </Card>
     );
   }
-
-  const client = getClientById(project.clientId);
 
   return (
     <Card className="p-6">

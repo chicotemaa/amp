@@ -1,12 +1,14 @@
 "use client";
 
-import { useMemo } from "react";
+import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { BarChart2, Users, FileText, AlertCircle } from "lucide-react";
-import { getProjectById } from "@/lib/api/projects";
-import { getEmployeesByProject } from "@/lib/api/employees";
+import { getProjectByIdDb } from "@/lib/api/projects";
+import { getEmployeesByProjectDb } from "@/lib/api/employees";
 import { Badge } from "@/components/ui/badge";
+import { Project } from "@/lib/types/project";
+import { Employee } from "@/lib/types/employee";
 
 interface ProjectOverviewProps {
   projectId: string;
@@ -14,8 +16,27 @@ interface ProjectOverviewProps {
 
 export function ProjectOverview({ projectId }: ProjectOverviewProps) {
   const id = Number(projectId);
-  const project = useMemo(() => getProjectById(id), [id]);
-  const assignedEmployees = useMemo(() => getEmployeesByProject(id), [id]);
+  const [project, setProject] = useState<Project | null>(null);
+  const [assignedEmployees, setAssignedEmployees] = useState<Employee[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function load() {
+      setLoading(true);
+      const [proj, emps] = await Promise.all([
+        getProjectByIdDb(id),
+        getEmployeesByProjectDb(id)
+      ]);
+      setProject(proj);
+      setAssignedEmployees(emps);
+      setLoading(false);
+    }
+    load();
+  }, [id]);
+
+  if (loading) {
+    return <div className="p-4 text-sm text-muted-foreground">Cargando resumen...</div>;
+  }
 
   if (!project) {
     return (

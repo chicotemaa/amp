@@ -1,14 +1,37 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { getProjectById } from "@/lib/api/projects";
+import { getProjectByIdDb } from "@/lib/api/projects";
+import { Project } from "@/lib/types/project";
 
 interface ProjectTimelineProps {
   projectId: string;
 }
 
 export function ProjectTimeline({ projectId }: ProjectTimelineProps) {
-  const project = getProjectById(Number(projectId));
+  const [project, setProject] = useState<Project | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    getProjectByIdDb(Number(projectId)).then(p => {
+      setProject(p);
+      setLoading(false);
+    });
+  }, [projectId]);
+
+  if (loading) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>Cronograma del Proyecto</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="text-sm text-muted-foreground">Cargando cronograma...</p>
+        </CardContent>
+      </Card>
+    );
+  }
   if (!project) {
     return (
       <Card>

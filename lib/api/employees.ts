@@ -44,6 +44,27 @@ export async function getEmployeesDb(): Promise<Employee[]> {
     );
 }
 
+export async function getEmployeesByProjectDb(projectId: number): Promise<Employee[]> {
+    const { data: linksData, error: linksError } = await supabase
+        .from("employee_projects")
+        .select("employee_id")
+        .eq("project_id", projectId);
+
+    if (linksError || !linksData) return [];
+
+    const employeeIds = linksData.map(l => l.employee_id);
+    if (employeeIds.length === 0) return [];
+
+    const { data: employeesData, error: employeesError } = await supabase
+        .from("employees")
+        .select("*")
+        .in("id", employeeIds);
+
+    if (employeesError || !employeesData) return [];
+
+    return (employeesData as EmployeeRow[]).map(row => mapEmployeeRow(row, [projectId]));
+}
+
 export function getEmployees(): Employee[] {
     return EMPLOYEES;
 }

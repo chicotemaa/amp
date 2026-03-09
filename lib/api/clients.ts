@@ -42,6 +42,15 @@ export async function getClientsDb(): Promise<Client[]> {
     return (clientsData as ClientRow[]).map((row) => mapClientRow(row, linksByClient[row.id] ?? []));
 }
 
+export async function getClientByIdDb(id: number): Promise<Client | null> {
+    const { data, error } = await supabase.from("clients").select("*").eq("id", id).single();
+    if (error) {
+        console.error("Supabase client error:", error.message);
+        return null;
+    }
+    return mapClientRow(data as ClientRow, []);
+}
+
 export function getClients(): Client[] {
     return CLIENTS;
 }

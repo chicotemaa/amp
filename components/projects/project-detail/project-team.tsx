@@ -1,9 +1,12 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { getEmployeesByProject } from "@/lib/api/employees";
-import { getProjectById } from "@/lib/api/projects";
+import { getEmployeesByProjectDb } from "@/lib/api/employees";
+import { getProjectByIdDb } from "@/lib/api/projects";
+import { Project } from "@/lib/types/project";
+import { Employee } from "@/lib/types/employee";
 
 interface ProjectTeamProps {
   projectId: string;
@@ -11,8 +14,27 @@ interface ProjectTeamProps {
 
 export function ProjectTeam({ projectId }: ProjectTeamProps) {
   const id = Number(projectId);
-  const project = getProjectById(id);
-  const teamMembers = getEmployeesByProject(id);
+  const [project, setProject] = useState<Project | null>(null);
+  const [teamMembers, setTeamMembers] = useState<Employee[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function load() {
+      setLoading(true);
+      const [proj, emps] = await Promise.all([
+        getProjectByIdDb(id),
+        getEmployeesByProjectDb(id)
+      ]);
+      setProject(proj);
+      setTeamMembers(emps);
+      setLoading(false);
+    }
+    load();
+  }, [id]);
+
+  if (loading) {
+    return <div className="p-4 text-sm text-muted-foreground">Cargando equipo...</div>;
+  }
 
   if (!project) {
     return (
