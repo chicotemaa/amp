@@ -10,7 +10,7 @@ import {
   LogOut,
   Calendar,
   DollarSign,
-  X
+  ClipboardList
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -114,6 +114,11 @@ export default function Header() {
       href: "/calendar",
       label: "Calendario",
       icon: Calendar
+    },
+    {
+      href: "/operations",
+      label: "Operaciones",
+      icon: ClipboardList
     },
     {
       href: "/cashflow",
