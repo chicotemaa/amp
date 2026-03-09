@@ -174,3 +174,46 @@ export async function deleteEmployee(id: number): Promise<void> {
         throw new Error("No se pudo eliminar el empleado.");
     }
 }
+
+export type AssignEmployeeToProjectInput = {
+    employeeId: number;
+    projectId: number;
+    hoursThisWeek?: number;
+};
+
+export async function assignEmployeeToProjectDb(
+    input: AssignEmployeeToProjectInput
+): Promise<void> {
+    const { error: linkError } = await supabase
+        .from("employee_projects")
+        .upsert(
+            {
+                employee_id: input.employeeId,
+                project_id: input.projectId,
+            },
+            { onConflict: "employee_id,project_id" }
+        );
+
+    if (linkError) {
+        console.error("Error assigning employee to project:", linkError.message);
+        throw new Error("No se pudo asignar el empleado al proyecto.");
+    }
+
+    const employeeUpdates: Database["public"]["Tables"]["employees"]["Update"] = {
+        status: "En Proyecto",
+    };
+
+    if (typeof input.hoursThisWeek === "number" && input.hoursThisWeek >= 0) {
+        employeeUpdates.hours_this_week = input.hoursThisWeek;
+    }
+
+    const { error: employeeError } = await supabase
+        .from("employees")
+        .update(employeeUpdates)
+        .eq("id", input.employeeId);
+
+    if (employeeError) {
+        console.error("Error updating employee after assignment:", employeeError.message);
+        throw new Error("Se asignó el proyecto, pero no se pudo actualizar el empleado.");
+    }
+}

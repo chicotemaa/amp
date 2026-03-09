@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
@@ -8,6 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { createProgressUpdateDb } from "@/lib/api/progress";
 import { toast } from "sonner";
+import { getSupabaseAuthBrowserClient } from "@/lib/supabase/auth-browser";
 
 interface DailyProgressFormProps {
   projectId: string;
@@ -19,6 +20,27 @@ export function DailyProgressForm({ projectId }: DailyProgressFormProps) {
   const [progressDelta, setProgressDelta] = useState(0);
   const [note, setNote] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [employeeId, setEmployeeId] = useState<number | null>(null);
+
+  useEffect(() => {
+    const loadEmployee = async () => {
+      const supabase = getSupabaseAuthBrowserClient();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("employee_id")
+        .eq("id", user.id)
+        .single();
+
+      setEmployeeId(profile?.employee_id ?? null);
+    };
+
+    void loadEmployee();
+  }, []);
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
@@ -30,7 +52,7 @@ export function DailyProgressForm({ projectId }: DailyProgressFormProps) {
         reportDate,
         progressDelta: Number(progressDelta),
         note: note.trim() || null,
-        reportedBy: null,
+        reportedBy: employeeId,
       });
       toast.success("Avance registrado correctamente.");
       setProgressDelta(0);
@@ -97,4 +119,3 @@ export function DailyProgressForm({ projectId }: DailyProgressFormProps) {
     </Card>
   );
 }
-

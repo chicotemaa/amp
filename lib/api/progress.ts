@@ -10,6 +10,7 @@ import {
 type ProjectPhaseRow = Database["public"]["Tables"]["project_phases"]["Row"];
 type MilestoneRow = Database["public"]["Tables"]["milestones"]["Row"];
 type ProgressUpdateRow = Database["public"]["Tables"]["progress_updates"]["Row"];
+type ProjectRow = Database["public"]["Tables"]["projects"]["Row"];
 
 function mapPhase(row: ProjectPhaseRow): ProjectPhase {
   return {
@@ -150,6 +151,55 @@ export async function createProgressUpdateDb(
     throw new Error("No se pudo registrar el avance.");
   }
 
+  // Keep project-level progress/status in sync with operational updates.
+  const { data: projectData } = await supabase
+    .from("projects")
+    .select("*")
+    .eq("id", input.projectId)
+    .single();
+
+  if (projectData) {
+    const project = projectData as ProjectRow;
+    const currentProgress = Number(project.progress ?? 0);
+    const delta = Number(input.progressDelta ?? 0);
+    const nextProgress = Math.min(100, Math.max(0, currentProgress + delta));
+
+    const updates: Database["public"]["Tables"]["projects"]["Update"] = {
+      progress: nextProgress,
+    };
+
+    if (nextProgress >= 100) {
+      updates.status = "completed";
+    } else if (nextProgress > 0 && project.status === "planning") {
+      updates.status = "in-progress";
+    }
+
+    await supabase.from("projects").update(updates).eq("id", input.projectId);
+  }
+
   return mapProgressUpdate(data as ProgressUpdateRow);
 }
 
+export async function updateMilestoneStatusDb(
+  id: string,
+  status: Milestone["status"]
+): Promise<Milestone> {
+  const updates: Database["public"]["Tables"]["milestones"]["Update"] = {
+    status,
+    completed_at: status === "completed" ? new Date().toISOString().slice(0, 10) : null,
+  };
+
+  const { data, error } = await supabase
+    .from("milestones")
+    .update(updates)
+    .eq("id", id)
+    .select("*")
+    .single();
+
+  if (error) {
+    console.error("Error updating milestone:", error.message);
+    throw new Error("No se pudo actualizar el hito.");
+  }
+
+  return mapMilestone(data as MilestoneRow);
+}

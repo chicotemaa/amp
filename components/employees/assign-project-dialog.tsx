@@ -5,7 +5,6 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import {
@@ -17,119 +16,112 @@ import {
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Calendar } from "@/components/ui/calendar";
-import { Calendar as CalendarIcon } from "lucide-react";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { format } from "date-fns";
-import { useState } from "react";
-import { cn } from "@/lib/utils";
+import { useEffect, useState } from "react";
+import { getProjectsDb } from "@/lib/api/projects";
+import { assignEmployeeToProjectDb } from "@/lib/api/employees";
+import type { Employee } from "@/lib/types/employee";
+import type { Project } from "@/lib/types/project";
+import { toast } from "sonner";
 
-export function AssignProjectDialog({ employee }: { employee: any }) {
-  const [startDate, setStartDate] = useState<Date>();
-  const [endDate, setEndDate] = useState<Date>();
+interface AssignProjectDialogProps {
+  employee: Employee | null;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  onAssigned?: () => void;
+}
+
+export function AssignProjectDialog({
+  employee,
+  open,
+  onOpenChange,
+  onAssigned,
+}: AssignProjectDialogProps) {
+  const [projects, setProjects] = useState<Project[]>([]);
+  const [projectId, setProjectId] = useState<string>("");
+  const [hoursThisWeek, setHoursThisWeek] = useState<number>(40);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  useEffect(() => {
+    if (!open) return;
+    getProjectsDb()
+      .then((data) => setProjects(data))
+      .catch(() => setProjects([]));
+  }, [open]);
+
+  useEffect(() => {
+    if (employee) {
+      setHoursThisWeek(employee.hoursThisWeek);
+    }
+  }, [employee]);
+
+  const handleAssign = async (event: React.FormEvent) => {
+    event.preventDefault();
+    if (!employee || !projectId) return;
+    setIsSubmitting(true);
+    try {
+      await assignEmployeeToProjectDb({
+        employeeId: employee.id,
+        projectId: Number(projectId),
+        hoursThisWeek,
+      });
+      toast.success("Empleado asignado al proyecto.");
+      onOpenChange(false);
+      onAssigned?.();
+    } catch (error: any) {
+      toast.error(error?.message ?? "No se pudo asignar el empleado.");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   return (
-    <Dialog>
-      <DialogTrigger asChild>
-        <Button variant="ghost">Asignar Proyecto</Button>
-      </DialogTrigger>
+    <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Asignar Proyecto a {employee.name}</DialogTitle>
+          <DialogTitle>
+            {employee ? `Asignar Proyecto a ${employee.name}` : "Asignar Proyecto"}
+          </DialogTitle>
         </DialogHeader>
 
-        <form className="space-y-4">
+        <form className="space-y-4" onSubmit={handleAssign}>
           <div className="space-y-2">
             <Label>Proyecto</Label>
-            <Select>
+            <Select value={projectId} onValueChange={setProjectId}>
               <SelectTrigger>
                 <SelectValue placeholder="Seleccionar proyecto" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="1">Torre Residencial Marina</SelectItem>
-                <SelectItem value="2">Centro Comercial Plaza Norte</SelectItem>
-                <SelectItem value="3">Complejo Deportivo Olímpico</SelectItem>
+                {projects.map((project) => (
+                  <SelectItem key={project.id} value={String(project.id)}>
+                    {project.name}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
-          </div>
-
-          <div className="space-y-2">
-            <Label>Rol en el Proyecto</Label>
-            <Select>
-              <SelectTrigger>
-                <SelectValue placeholder="Seleccionar rol" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="lead">Líder de Proyecto</SelectItem>
-                <SelectItem value="architect">Arquitecto</SelectItem>
-                <SelectItem value="engineer">Ingeniero</SelectItem>
-                <SelectItem value="supervisor">Supervisor</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label>Fecha de Inicio</Label>
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant="outline"
-                    className={cn(
-                      "w-full justify-start text-left font-normal",
-                      !startDate && "text-muted-foreground"
-                    )}
-                  >
-                    <CalendarIcon className="mr-2 h-4 w-4" />
-                    {startDate ? format(startDate, "PPP") : "Seleccionar fecha"}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0">
-                  <Calendar
-                    mode="single"
-                    selected={startDate}
-                    onSelect={setStartDate}
-                    initialFocus
-                  />
-                </PopoverContent>
-              </Popover>
-            </div>
-
-            <div className="space-y-2">
-              <Label>Fecha de Fin</Label>
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant="outline"
-                    className={cn(
-                      "w-full justify-start text-left font-normal",
-                      !endDate && "text-muted-foreground"
-                    )}
-                  >
-                    <CalendarIcon className="mr-2 h-4 w-4" />
-                    {endDate ? format(endDate, "PPP") : "Seleccionar fecha"}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0">
-                  <Calendar
-                    mode="single"
-                    selected={endDate}
-                    onSelect={setEndDate}
-                    initialFocus
-                  />
-                </PopoverContent>
-              </Popover>
-            </div>
           </div>
 
           <div className="space-y-2">
             <Label>Horas Semanales Asignadas</Label>
-            <Input type="number" placeholder="40" />
+            <Input
+              type="number"
+              min={0}
+              value={hoursThisWeek}
+              onChange={(event) => setHoursThisWeek(Number(event.target.value))}
+            />
           </div>
 
           <div className="flex justify-end gap-2">
-            <Button variant="outline">Cancelar</Button>
-            <Button type="submit">Asignar</Button>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => onOpenChange(false)}
+              disabled={isSubmitting}
+            >
+              Cancelar
+            </Button>
+            <Button type="submit" disabled={!projectId || isSubmitting || !employee}>
+              {isSubmitting ? "Asignando..." : "Asignar"}
+            </Button>
           </div>
         </form>
       </DialogContent>

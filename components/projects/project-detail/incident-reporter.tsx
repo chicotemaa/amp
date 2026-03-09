@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
@@ -16,6 +16,7 @@ import {
 import { createIncidentDb } from "@/lib/api/incidents";
 import { toast } from "sonner";
 import type { IncidentSeverity, IncidentStatus, IncidentType } from "@/lib/types/incident";
+import { getSupabaseAuthBrowserClient } from "@/lib/supabase/auth-browser";
 
 interface IncidentReporterProps {
   projectId: string;
@@ -30,6 +31,27 @@ export function IncidentReporter({ projectId }: IncidentReporterProps) {
   const [impactCost, setImpactCost] = useState(0);
   const [description, setDescription] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [employeeId, setEmployeeId] = useState<number | null>(null);
+
+  useEffect(() => {
+    const loadEmployee = async () => {
+      const supabase = getSupabaseAuthBrowserClient();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("employee_id")
+        .eq("id", user.id)
+        .single();
+
+      setEmployeeId(profile?.employee_id ?? null);
+    };
+
+    void loadEmployee();
+  }, []);
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
@@ -43,7 +65,7 @@ export function IncidentReporter({ projectId }: IncidentReporterProps) {
         severity,
         impactDays,
         impactCost,
-        ownerId: null,
+        ownerId: employeeId,
         status,
         openedAt: new Date().toISOString().slice(0, 10),
         resolvedAt: null,
@@ -178,4 +200,3 @@ export function IncidentReporter({ projectId }: IncidentReporterProps) {
     </Card>
   );
 }
-

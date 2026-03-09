@@ -27,12 +27,15 @@ export default async function OperationsPage() {
   }
 
   const supabase = getSupabaseServerClient();
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from("projects")
     .select("id, name, status, progress")
     .order("id", { ascending: true });
 
   const projects = (data ?? []) as OperationsProjectRow[];
+  const fetchError = error
+    ? "No se pudieron cargar los proyectos operativos. Revisa permisos o conexión con Supabase."
+    : null;
 
   return (
     <div className="flex flex-col gap-8">
@@ -44,7 +47,7 @@ export default async function OperationsPage() {
           Registra avances diarios, incidentes y monitorea el estado operativo por proyecto.
         </p>
       </div>
-      <OperationsWorkspace projects={projects} />
+      <OperationsWorkspace projects={projects} fetchError={fetchError} />
     </div>
   );
 }

@@ -13,11 +13,14 @@ import {
 import { getEmployeesDb } from "@/lib/api/employees";
 import { Employee } from "@/lib/types/employee";
 import { useEffect, useState, useCallback } from "react";
+import { AssignProjectDialog } from "@/components/employees/assign-project-dialog";
 
 export function EmployeeList() {
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [employeeToAssign, setEmployeeToAssign] = useState<Employee | null>(null);
+  const [assignDialogOpen, setAssignDialogOpen] = useState(false);
 
   const fetchEmployees = useCallback(async () => {
     setIsLoading(true);
@@ -117,7 +120,14 @@ export function EmployeeList() {
                     <DropdownMenuContent align="end">
                       <DropdownMenuItem>Ver Perfil</DropdownMenuItem>
                       <DropdownMenuItem>Editar</DropdownMenuItem>
-                      <DropdownMenuItem>Asignar Proyecto</DropdownMenuItem>
+                      <DropdownMenuItem
+                        onClick={() => {
+                          setEmployeeToAssign(employee);
+                          setAssignDialogOpen(true);
+                        }}
+                      >
+                        Asignar Proyecto
+                      </DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
                 </TableCell>
@@ -126,6 +136,12 @@ export function EmployeeList() {
           })}
         </TableBody>
       </Table>
+      <AssignProjectDialog
+        employee={employeeToAssign}
+        open={assignDialogOpen}
+        onOpenChange={setAssignDialogOpen}
+        onAssigned={fetchEmployees}
+      />
     </div>
   );
 }

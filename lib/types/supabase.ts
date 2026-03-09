@@ -534,6 +534,81 @@ export interface Database {
         };
         Relationships: [];
       };
+      materials: {
+        Row: {
+          id: string;
+          project_id: number;
+          name: string;
+          unit: string;
+          planned_qty: number;
+          current_stock: number;
+          reorder_point: number;
+          location: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          project_id: number;
+          name: string;
+          unit: string;
+          planned_qty?: number;
+          current_stock?: number;
+          reorder_point?: number;
+          location?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          project_id?: number;
+          name?: string;
+          unit?: string;
+          planned_qty?: number;
+          current_stock?: number;
+          reorder_point?: number;
+          location?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+      material_movements: {
+        Row: {
+          id: string;
+          material_id: string;
+          project_id: number;
+          movement_type: string;
+          quantity: number;
+          note: string | null;
+          created_by: number | null;
+          movement_date: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          material_id: string;
+          project_id: number;
+          movement_type: string;
+          quantity: number;
+          note?: string | null;
+          created_by?: number | null;
+          movement_date?: string;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          material_id?: string;
+          project_id?: number;
+          movement_type?: string;
+          quantity?: number;
+          note?: string | null;
+          created_by?: number | null;
+          movement_date?: string;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
       project_budget_control: {
         Row: {
           id: string;

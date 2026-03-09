@@ -12,6 +12,7 @@ import {
 import { DailyProgressForm } from "@/components/projects/project-detail/daily-progress-form";
 import { IncidentReporter } from "@/components/projects/project-detail/incident-reporter";
 import { ProgressReport } from "@/components/projects/project-detail/progress-report";
+import { MilestonesBoard } from "@/components/operations/milestones-board";
 
 type OperationsProject = {
   id: number;
@@ -22,9 +23,10 @@ type OperationsProject = {
 
 interface OperationsWorkspaceProps {
   projects: OperationsProject[];
+  fetchError?: string | null;
 }
 
-export function OperationsWorkspace({ projects }: OperationsWorkspaceProps) {
+export function OperationsWorkspace({ projects, fetchError = null }: OperationsWorkspaceProps) {
   const defaultProjectId = useMemo(
     () => (projects.length > 0 ? String(projects[0].id) : ""),
     [projects]
@@ -48,6 +50,13 @@ export function OperationsWorkspace({ projects }: OperationsWorkspaceProps) {
 
   return (
     <div className="space-y-6">
+      {fetchError ? (
+        <Card>
+          <CardContent className="py-4 text-sm text-red-600">
+            {fetchError}
+          </CardContent>
+        </Card>
+      ) : null}
       <Card>
         <CardHeader>
           <CardTitle>Proyecto Operativo</CardTitle>
@@ -82,6 +91,7 @@ export function OperationsWorkspace({ projects }: OperationsWorkspaceProps) {
         <div className="grid gap-6 lg:grid-cols-2">
           <DailyProgressForm projectId={selectedProjectId} />
           <IncidentReporter projectId={selectedProjectId} />
+          <MilestonesBoard projectId={selectedProjectId} />
           <div className="lg:col-span-2">
             <ProgressReport projectId={selectedProjectId} />
           </div>
