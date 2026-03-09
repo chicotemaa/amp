@@ -105,7 +105,9 @@ export function ClientList({ filters }: ClientListProps) {
                 <TableCell>
                   <div className="flex items-center gap-3">
                     <Avatar className="h-9 w-9">
-                      <AvatarImage src={client.avatar} />
+                      {client.avatar && client.avatar.startsWith("http") ? (
+                        <AvatarImage src={client.avatar} />
+                      ) : null}
                       <AvatarFallback>{initials}</AvatarFallback>
                     </Avatar>
                     <div>

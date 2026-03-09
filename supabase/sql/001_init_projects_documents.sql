@@ -87,6 +87,49 @@ begin
     to anon, authenticated
     using (true);
   end if;
+
+  if not exists (
+    select 1
+    from pg_policies
+    where schemaname = 'public'
+      and tablename = 'projects'
+      and policyname = 'projects_insert_all'
+  ) then
+    create policy "projects_insert_all"
+    on public.projects
+    for insert
+    to anon, authenticated
+    with check (true);
+  end if;
+
+  if not exists (
+    select 1
+    from pg_policies
+    where schemaname = 'public'
+      and tablename = 'projects'
+      and policyname = 'projects_update_all'
+  ) then
+    create policy "projects_update_all"
+    on public.projects
+    for update
+    to anon, authenticated
+    using (true)
+    with check (true);
+  end if;
+
+  if not exists (
+    select 1
+    from pg_policies
+    where schemaname = 'public'
+      and tablename = 'projects'
+      and policyname = 'projects_delete_all'
+  ) then
+    create policy "projects_delete_all"
+    on public.projects
+    for delete
+    to anon, authenticated
+    using (true);
+  end if;
 end $$;
 
 do $$

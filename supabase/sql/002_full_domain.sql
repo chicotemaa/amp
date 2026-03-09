@@ -220,6 +220,7 @@ begin
     'transactions',
     'monthly_cashflow'
   ] loop
+    -- Select policy
     if not exists (
       select 1 from pg_policies
       where schemaname = 'public'
@@ -229,6 +230,48 @@ begin
       execute format(
         'create policy %I on public.%I for select to anon, authenticated using (true)',
         tbl || '_select_all',
+        tbl
+      );
+    end if;
+
+    -- Insert policy
+    if not exists (
+      select 1 from pg_policies
+      where schemaname = 'public'
+        and tablename = tbl
+        and policyname = tbl || '_insert_all'
+    ) then
+      execute format(
+        'create policy %I on public.%I for insert to anon, authenticated with check (true)',
+        tbl || '_insert_all',
+        tbl
+      );
+    end if;
+
+    -- Update policy
+    if not exists (
+      select 1 from pg_policies
+      where schemaname = 'public'
+        and tablename = tbl
+        and policyname = tbl || '_update_all'
+    ) then
+      execute format(
+        'create policy %I on public.%I for update to anon, authenticated using (true)',
+        tbl || '_update_all',
+        tbl
+      );
+    end if;
+
+    -- Delete policy
+    if not exists (
+      select 1 from pg_policies
+      where schemaname = 'public'
+        and tablename = tbl
+        and policyname = tbl || '_delete_all'
+    ) then
+      execute format(
+        'create policy %I on public.%I for delete to anon, authenticated using (true)',
+        tbl || '_delete_all',
         tbl
       );
     end if;

@@ -72,7 +72,9 @@ export function EmployeeList() {
                 <TableCell>
                   <div className="flex items-center gap-3">
                     <Avatar className="h-9 w-9">
-                      <AvatarImage src={employee.avatar} />
+                      {employee.avatar && employee.avatar.startsWith("http") ? (
+                        <AvatarImage src={employee.avatar} />
+                      ) : null}
                       <AvatarFallback>{initials}</AvatarFallback>
                     </Avatar>
                     <div>
