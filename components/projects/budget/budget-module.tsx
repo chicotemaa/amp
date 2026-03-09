@@ -1,3 +1,5 @@
+"use client";
+
 import { useCallback, useEffect, useState } from "react";
 import { BudgetVersion, BudgetItem } from "@/lib/types/budget";
 import { BudgetStats } from "./budget-stats";
