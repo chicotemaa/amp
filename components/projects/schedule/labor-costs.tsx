@@ -7,51 +7,53 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { getProjectById } from "@/lib/api/projects";
 
 interface LaborCostsProps {
   projectId: string;
 }
 
-const laborData = [
-  {
-    category: "Oficial",
-    assigned: 5,
-    daysWorked: 45,
-    plannedDays: 40,
-    costPerDay: 250,
-    totalCost: 11250,
-    variance: -1250,
-  },
-  {
-    category: "Medio Oficial",
-    assigned: 8,
-    daysWorked: 42,
-    plannedDays: 40,
-    costPerDay: 200,
-    totalCost: 67200,
-    variance: -3200,
-  },
-  {
-    category: "Ayudante",
-    assigned: 12,
-    daysWorked: 38,
-    plannedDays: 40,
-    costPerDay: 150,
-    totalCost: 68400,
-    variance: 3600,
-  },
-  {
-    category: "Encargado",
-    assigned: 2,
-    daysWorked: 45,
-    plannedDays: 45,
-    costPerDay: 300,
-    totalCost: 27000,
-    variance: 0,
-  },
-];
-
 export function LaborCosts({ projectId }: LaborCostsProps) {
+  const project = getProjectById(Number(projectId));
+  if (!project) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>Costos de Personal</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="text-sm text-muted-foreground">Proyecto no encontrado.</p>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  const plannedDays = Math.max(
+    30,
+    Math.round(
+      (new Date(project.endDate).getTime() - new Date(project.startDate).getTime()) /
+        (1000 * 60 * 60 * 24)
+    )
+  );
+
+  const laborData = [
+    { category: "Oficial", assigned: Math.max(2, Math.round(project.teamSize * 0.3)), costPerDay: 250 },
+    { category: "Medio Oficial", assigned: Math.max(2, Math.round(project.teamSize * 0.4)), costPerDay: 200 },
+    { category: "Ayudante", assigned: Math.max(2, Math.round(project.teamSize * 0.2)), costPerDay: 150 },
+    { category: "Encargado", assigned: Math.max(1, Math.round(project.teamSize * 0.1)), costPerDay: 300 },
+  ].map((labor) => {
+    const daysWorked = Math.round((plannedDays * project.progress) / 100);
+    const plannedCost = labor.assigned * plannedDays * labor.costPerDay;
+    const actualCost = labor.assigned * daysWorked * labor.costPerDay;
+    return {
+      ...labor,
+      daysWorked,
+      plannedDays,
+      totalCost: actualCost,
+      variance: plannedCost - actualCost,
+    };
+  });
+
   return (
     <Card>
       <CardHeader>

@@ -8,16 +8,41 @@ import {
   Clock,
   AlertTriangle
 } from "lucide-react";
+import { getProjectById } from "@/lib/api/projects";
 
-export function ProgressReport() {
+interface ProgressReportProps {
+  projectId: string;
+}
+
+export function ProgressReport({ projectId }: ProgressReportProps) {
+  const project = getProjectById(Number(projectId));
+  if (!project) {
+    return (
+      <Card className="p-6">
+        <p className="text-sm text-muted-foreground">Proyecto no encontrado.</p>
+      </Card>
+    );
+  }
+
+  const phaseTemplate = [
+    { name: "Diseño", threshold: 25 },
+    { name: "Cimentación", threshold: 50 },
+    { name: "Estructura", threshold: 75 },
+    { name: "Acabados", threshold: 100 },
+  ];
+
   const progressData = {
-    overall: 75,
-    phases: [
-      { name: "Diseño", progress: 100, status: "completed" },
-      { name: "Cimentación", progress: 85, status: "inProgress" },
-      { name: "Estructura", progress: 60, status: "inProgress" },
-      { name: "Acabados", progress: 0, status: "pending" }
-    ]
+    overall: project.progress,
+    phases: phaseTemplate.map((phase, index) => {
+      const base = index * 25;
+      const progress = Math.max(0, Math.min(100, (project.progress - base) * 4));
+      return {
+        name: phase.name,
+        progress,
+        status:
+          progress >= 100 ? "completed" : progress > 0 ? "inProgress" : "pending",
+      };
+    }),
   };
 
   const getStatusIcon = (status: string) => {
