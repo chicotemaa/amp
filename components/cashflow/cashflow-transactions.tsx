@@ -1,103 +1,102 @@
 "use client";
 
 import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+  Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
+} from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { ArrowUpCircle, ArrowDownCircle } from "lucide-react";
+import { getTransactionsDb } from "@/lib/api/cashflow";
+import { TRANSACTION_CATEGORY_LABELS, Transaction } from "@/lib/types/cashflow";
+import { useEffect, useState, useCallback } from "react";
 
-const transactions = [
-  {
-    id: 1,
-    type: "ingreso",
-    description: "Pago inicial - Torre Residencial",
-    amount: 150000,
-    date: "2024-03-18",
-    category: "contracts",
-    project: "Torre Residencial Marina"
-  },
-  {
-    id: 2,
-    type: "egreso",
-    description: "Compra de materiales construcción",
-    amount: 45000,
-    date: "2024-03-17",
-    category: "materials",
-    project: "Centro Comercial Plaza Norte"
-  },
-  {
-    id: 3,
-    type: "egreso",
-    description: "Pago nómina empleados",
-    amount: 35000,
-    date: "2024-03-16",
-    category: "labor",
-    project: "Complejo Deportivo Olímpico"
-  },
-  {
-    id: 4,
-    type: "egreso",
-    description: "Servicios públicos",
-    amount: 2500,
-    date: "2024-03-15",
-    category: "services",
-    project: "General"
-  },
-  {
-    id: 5,
-    type: "ingreso",
-    description: "Pago parcial - Centro Comercial",
-    amount: 200000,
-    date: "2024-03-14",
-    category: "contracts",
-    project: "Centro Comercial Plaza Norte"
-  }
-];
+const fmt = (n: number) =>
+  new Intl.NumberFormat("es-AR", {
+    style: "currency",
+    currency: "USD",
+    maximumFractionDigits: 0,
+  }).format(n);
 
 export function CashflowTransactions() {
+  const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  const fetchTransactions = useCallback(async () => {
+    setIsLoading(true);
+    try {
+      const data = await getTransactionsDb();
+      setTransactions(data);
+    } catch (err: any) {
+      console.error(err);
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchTransactions();
+
+    const handleTransactionCreated = () => {
+      fetchTransactions();
+    };
+    window.addEventListener("transactionCreated", handleTransactionCreated);
+    return () => window.removeEventListener("transactionCreated", handleTransactionCreated);
+  }, [fetchTransactions]);
+
+  if (isLoading) {
+    return <div className="text-center p-4">Cargando transacciones...</div>;
+  }
+
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Últimas Transacciones</CardTitle>
-      </CardHeader>
-      <CardContent>
-        <ScrollArea className="h-[600px] pr-4">
-          <div className="space-y-6">
-            {transactions.map((transaction) => (
-              <div key={transaction.id} className="flex items-center justify-between">
-                <div className="flex items-center space-x-4">
-                  {transaction.type === "ingreso" ? (
-                    <ArrowUpCircle className="h-8 w-8 text-success" />
-                  ) : (
-                    <ArrowDownCircle className="h-8 w-8 text-destructive" />
-                  )}
-                  <div>
-                    <p className="text-sm font-medium">{transaction.description}</p>
-                    <div className="flex items-center space-x-2">
-                      <Badge variant="outline" className="text-xs">
-                        {transaction.project}
-                      </Badge>
-                      <span className="text-xs text-muted-foreground">
-                        {new Date(transaction.date).toLocaleDateString()}
-                      </span>
-                    </div>
+    <div className="rounded-md border">
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>Tipo</TableHead>
+            <TableHead>Descripción</TableHead>
+            <TableHead>Proyecto</TableHead>
+            <TableHead>Categoría</TableHead>
+            <TableHead>Fecha</TableHead>
+            <TableHead className="text-right">Monto</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {transactions.map((t) => (
+            <TableRow key={t.id}>
+              <TableCell>
+                {t.type === "ingreso" ? (
+                  <div className="flex items-center gap-1 text-green-500">
+                    <ArrowUpCircle className="h-4 w-4" />
+                    <span className="text-xs font-medium">Ingreso</span>
                   </div>
-                </div>
-                <div className={`text-sm font-medium ${
-                  transaction.type === "ingreso" ? "text-success" : "text-destructive"
-                }`}>
-                  {transaction.type === "ingreso" ? "+" : "-"}
-                  ${transaction.amount.toLocaleString()}
-                </div>
-              </div>
-            ))}
-          </div>
-        </ScrollArea>
-      </CardContent>
-    </Card>
+                ) : (
+                  <div className="flex items-center gap-1 text-red-500">
+                    <ArrowDownCircle className="h-4 w-4" />
+                    <span className="text-xs font-medium">Egreso</span>
+                  </div>
+                )}
+              </TableCell>
+              <TableCell className="font-medium">{t.description}</TableCell>
+              <TableCell>
+                <span className="text-sm text-muted-foreground max-w-[160px] truncate block">
+                  {t.projectName}
+                </span>
+              </TableCell>
+              <TableCell>
+                <Badge variant="outline" className="text-xs">
+                  {TRANSACTION_CATEGORY_LABELS[t.category]}
+                </Badge>
+              </TableCell>
+              <TableCell className="text-muted-foreground text-sm">
+                {new Date(t.date).toLocaleDateString("es-AR")}
+              </TableCell>
+              <TableCell className={`text-right font-bold ${t.type === "ingreso" ? "text-green-500" : "text-red-500"}`}>
+                {t.type === "ingreso" ? "+" : "-"}
+                {fmt(t.amount)}
+              </TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+    </div>
   );
 }
