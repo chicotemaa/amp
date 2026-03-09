@@ -2,14 +2,18 @@
 
 import { Card } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import { 
+import {
   BarChart,
   CheckCircle2,
   Clock,
   AlertTriangle
 } from "lucide-react";
 
-export function ProgressReport() {
+interface ProgressReportProps {
+  projectId?: string;
+}
+
+export function ProgressReport({ projectId }: ProgressReportProps) {
   const progressData = {
     overall: 75,
     phases: [
