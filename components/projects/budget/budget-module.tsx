@@ -1,5 +1,3 @@
-"use client";
-
 import { useCallback, useEffect, useState } from "react";
 import { BudgetVersion, BudgetItem } from "@/lib/types/budget";
 import { BudgetStats } from "./budget-stats";
@@ -13,6 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { DollarSign } from "lucide-react";
+import { getBudgetsByProject, saveBudgetVersion } from "@/lib/api/budgets";
 
 interface BudgetModuleProps {
     projectId: string;
@@ -33,28 +32,14 @@ function makeId() {
     return Math.random().toString(36).slice(2, 10);
 }
 
-function seedVersion(): BudgetVersion {
+function generateSeedVersion(): Omit<BudgetVersion, "createdAt"> {
     return {
         id: makeId(),
         version: 1,
         label: "Versión 1",
         description: "Presupuesto inicial aprobado",
-        createdAt: new Date().toISOString(),
         items: SEED_ITEMS.map((i) => ({ ...i, id: makeId() })),
     };
-}
-
-function loadFromStorage(projectId: string): BudgetVersion[] | null {
-    try {
-        const raw = localStorage.getItem(`amp_budget_${projectId}`);
-        return raw ? JSON.parse(raw) : null;
-    } catch {
-        return null;
-    }
-}
-
-function saveToStorage(projectId: string, versions: BudgetVersion[]) {
-    localStorage.setItem(`amp_budget_${projectId}`, JSON.stringify(versions));
 }
 
 export function BudgetModule({ projectId }: BudgetModuleProps) {
@@ -64,36 +49,36 @@ export function BudgetModule({ projectId }: BudgetModuleProps) {
     const [newVersionDesc, setNewVersionDesc] = useState("");
     const [mounted, setMounted] = useState(false);
 
-    // Load from localStorage on mount
-    useEffect(() => {
-        const stored = loadFromStorage(projectId);
-        if (stored && stored.length > 0) {
-            setVersions(stored);
-            setActiveVersionId(stored[stored.length - 1].id);
+    const loadData = useCallback(async () => {
+        const data = await getBudgetsByProject(Number(projectId));
+        if (data && data.length > 0) {
+            setVersions(data);
+            setActiveVersionId(data[data.length - 1].id);
         } else {
-            const initial = [seedVersion()];
-            setVersions(initial);
-            setActiveVersionId(initial[0].id);
-            saveToStorage(projectId, initial);
+            // First time accessing this project's budget, inject the seed version via Supabase
+            const seed = generateSeedVersion();
+            const created = await saveBudgetVersion(Number(projectId), seed);
+            if (created) {
+                setVersions([created]);
+                setActiveVersionId(created.id);
+            }
         }
         setMounted(true);
     }, [projectId]);
 
-    const persist = useCallback(
-        (updated: BudgetVersion[]) => {
-            setVersions(updated);
-            saveToStorage(projectId, updated);
-        },
-        [projectId]
-    );
+    useEffect(() => {
+        loadData();
+    }, [loadData]);
 
     const activeVersion = versions.find((v) => v.id === activeVersionId) ?? versions[0];
 
-    const updateItems = (items: BudgetItem[]) => {
-        const updated = versions.map((v) =>
-            v.id === activeVersionId ? { ...v, items } : v
-        );
-        persist(updated);
+    const updateItems = async (items: BudgetItem[]) => {
+        if (!activeVersion) return;
+        const updatedVersion = { ...activeVersion, items };
+        const saved = await saveBudgetVersion(Number(projectId), updatedVersion);
+        if (saved) {
+            setVersions(versions.map((v) => (v.id === activeVersionId ? saved : v)));
+        }
     };
 
     const handleAddItem = (data: Omit<BudgetItem, "id">) => {
@@ -111,30 +96,32 @@ export function BudgetModule({ projectId }: BudgetModuleProps) {
         updateItems((activeVersion?.items ?? []).filter((i) => i.id !== id));
     };
 
-    const handleNewVersion = () => {
+    const handleNewVersion = async () => {
         if (!activeVersion) return;
-        const next: BudgetVersion = {
+        const next: Omit<BudgetVersion, "createdAt"> = {
             id: makeId(),
             version: versions.length + 1,
             label: `Versión ${versions.length + 1}`,
             description: newVersionDesc.trim() || "Sin descripción",
-            createdAt: new Date().toISOString(),
             items: activeVersion.items.map((i) => ({ ...i, id: makeId() })),
         };
-        const updated = [...versions, next];
-        persist(updated);
-        setActiveVersionId(next.id);
-        setNewVersionDesc("");
-        setNewVersionDialog(false);
+        const saved = await saveBudgetVersion(Number(projectId), next);
+        if (saved) {
+            setVersions([...versions, saved]);
+            setActiveVersionId(saved.id);
+            setNewVersionDesc("");
+            setNewVersionDialog(false);
+        }
     };
 
     if (!mounted || !activeVersion) {
         return (
             <div className="mt-6 flex items-center justify-center py-20 text-muted-foreground text-sm">
-                Cargando presupuesto...
+                Cargando presupuesto desde la base de datos...
             </div>
         );
     }
+
 
     return (
         <div className="mt-6 flex flex-col gap-6 animate-fadeIn">
