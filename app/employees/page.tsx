@@ -2,11 +2,10 @@ import { Metadata } from "next";
 import { EmployeeList } from "@/components/employees/employee-list";
 import { EmployeeStats } from "@/components/employees/employee-stats";
 import { EmployeeFilters } from "@/components/employees/employee-filters";
-import { Button } from "@/components/ui/button";
-import { UserPlus } from "lucide-react";
+import { NewEmployeeDialog } from "@/components/employees/new-employee-dialog";
 
 export const metadata: Metadata = {
-  title: "Empleados | ArchiPro",
+  title: "Empleados | ArquiManagerPro",
   description: "Gestión de empleados y recursos humanos",
 };
 
@@ -20,10 +19,7 @@ export default function EmployeesPage() {
             Gestión del equipo y recursos humanos
           </p>
         </div>
-        <Button className="flex items-center gap-2">
-          <UserPlus className="h-4 w-4" />
-          Nuevo Empleado
-        </Button>
+        <NewEmployeeDialog />
       </div>
 
       <EmployeeStats />
