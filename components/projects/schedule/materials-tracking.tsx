@@ -8,47 +8,58 @@ import {
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { MapPin, Package } from "lucide-react";
+import { getProjectById } from "@/lib/api/projects";
 
 interface MaterialsTrackingProps {
   projectId: string;
 }
 
-const materialsData = [
-  {
-    name: "Cemento Portland",
-    quantity: "200 bolsas",
-    location: "Almacén Principal",
-    status: "in-stock",
-    nextDelivery: "2024-04-01",
-    allocated: "Cimentación",
-  },
-  {
-    name: "Hierro 12mm",
-    quantity: "1500 metros",
-    location: "Zona de Obra",
-    status: "in-use",
-    nextDelivery: "2024-04-15",
-    allocated: "Estructura",
-  },
-  {
-    name: "Ladrillos",
-    quantity: "5000 unidades",
-    location: "Pendiente",
-    status: "ordered",
-    nextDelivery: "2024-04-10",
-    allocated: "Mampostería",
-  },
-  {
-    name: "Arena Fina",
-    quantity: "30 m³",
-    location: "Almacén Secundario",
-    status: "low",
-    nextDelivery: "2024-04-05",
-    allocated: "Revoque",
-  },
-];
-
 export function MaterialsTracking({ projectId }: MaterialsTrackingProps) {
+  const project = getProjectById(Number(projectId));
+  if (!project) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>Control de Materiales</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="text-sm text-muted-foreground">Proyecto no encontrado.</p>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  const materialsData = [
+    {
+      name: "Cemento Portland",
+      quantity: `${Math.max(80, Math.round(project.teamSize * 12))} bolsas`,
+      location: "Almacén Principal",
+      status: project.progress < 25 ? "in-stock" : "in-use",
+      allocated: "Cimentación",
+    },
+    {
+      name: "Hierro 12mm",
+      quantity: `${Math.max(600, Math.round(project.teamSize * 90))} metros`,
+      location: project.progress > 40 ? "Zona de Obra" : "Almacén Principal",
+      status: project.progress > 35 ? "in-use" : "ordered",
+      allocated: "Estructura",
+    },
+    {
+      name: "Ladrillos",
+      quantity: `${Math.max(3000, Math.round(project.teamSize * 260))} unidades`,
+      location: project.progress > 60 ? "Zona de Obra" : "Pendiente",
+      status: project.progress > 70 ? "low" : "ordered",
+      allocated: "Mampostería",
+    },
+    {
+      name: "Arena Fina",
+      quantity: `${Math.max(20, Math.round(project.teamSize * 1.8))} m³`,
+      location: "Almacén Secundario",
+      status: project.progress > 80 ? "low" : "in-stock",
+      allocated: "Acabados",
+    },
+  ];
+
   return (
     <Card>
       <CardHeader>

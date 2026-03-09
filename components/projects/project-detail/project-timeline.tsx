@@ -1,27 +1,57 @@
 "use client";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { getProjectById } from "@/lib/api/projects";
 
 interface ProjectTimelineProps {
   projectId: string;
 }
 
 export function ProjectTimeline({ projectId }: ProjectTimelineProps) {
+  const project = getProjectById(Number(projectId));
+  if (!project) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>Cronograma del Proyecto</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="text-sm text-muted-foreground">Proyecto no encontrado.</p>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  const start = new Date(project.startDate);
+  const end = new Date(project.endDate);
+  const durationDays = Math.max(
+    1,
+    Math.round((end.getTime() - start.getTime()) / (24 * 60 * 60 * 1000))
+  );
+  const milestoneDate = (ratio: number) =>
+    new Date(start.getTime() + Math.floor(durationDays * ratio) * 24 * 60 * 60 * 1000);
+  const formatDate = (date: Date) => date.toLocaleDateString("es-AR");
+
   const timelineEvents = [
     {
-      date: "15 Mar 2024",
-      title: "Inicio del Proyecto",
-      description: "Kickoff y planificación inicial",
+      date: formatDate(start),
+      title: "Inicio del proyecto",
+      description: `Inicio oficial de ${project.name}.`,
     },
     {
-      date: "20 Mar 2024",
-      title: "Diseño Arquitectónico",
-      description: "Desarrollo de planos preliminares",
+      date: formatDate(milestoneDate(0.3)),
+      title: "Hito de diseño y aprobaciones",
+      description: "Cierre de etapa de diseño y validaciones técnicas.",
     },
     {
-      date: "1 Abr 2024",
-      title: "Aprobación Municipal",
-      description: "Presentación de documentación",
+      date: formatDate(milestoneDate(0.6)),
+      title: "Ejecución principal de obra",
+      description: "Seguimiento de estructura, costos y avance acumulado.",
+    },
+    {
+      date: formatDate(end),
+      title: "Fecha objetivo de cierre",
+      description: "Finalización planificada del proyecto.",
     },
   ];
 

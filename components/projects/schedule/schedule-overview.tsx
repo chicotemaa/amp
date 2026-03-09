@@ -8,43 +8,50 @@ import {
 } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
+import { getProjectById } from "@/lib/api/projects";
 
 interface ScheduleOverviewProps {
   projectId: string;
 }
 
-const stages = [
-  {
-    name: "Replanteo",
-    startDate: "2024-03-15",
-    endDate: "2024-03-30",
-    progress: 100,
-    status: "completed",
-  },
-  {
-    name: "Cimentación",
-    startDate: "2024-04-01",
-    endDate: "2024-05-15",
-    progress: 75,
-    status: "in-progress",
-  },
-  {
-    name: "Estructura",
-    startDate: "2024-05-16",
-    endDate: "2024-07-30",
-    progress: 20,
-    status: "in-progress",
-  },
-  {
-    name: "Acabados",
-    startDate: "2024-08-01",
-    endDate: "2024-09-30",
-    progress: 0,
-    status: "pending",
-  },
-];
-
 export function ScheduleOverview({ projectId }: ScheduleOverviewProps) {
+  const project = getProjectById(Number(projectId));
+  if (!project) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>Cronograma de Obra</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="text-sm text-muted-foreground">Proyecto no encontrado.</p>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  const stages = [
+    { name: "Replanteo", progress: Math.min(project.progress * 1.6, 100), offset: [0, 15] as const },
+    { name: "Cimentación", progress: Math.max(0, Math.min((project.progress - 15) * 1.5, 100)), offset: [16, 45] as const },
+    { name: "Estructura", progress: Math.max(0, Math.min((project.progress - 40) * 1.6, 100)), offset: [46, 75] as const },
+    { name: "Acabados", progress: Math.max(0, Math.min((project.progress - 70) * 3.3, 100)), offset: [76, 100] as const },
+  ].map((stage) => {
+    const start = new Date(project.startDate);
+    const end = new Date(project.endDate);
+    const totalDays = Math.max(
+      1,
+      Math.round((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24))
+    );
+    const startDate = new Date(start.getTime() + Math.round((totalDays * stage.offset[0]) / 100) * 24 * 60 * 60 * 1000);
+    const endDate = new Date(start.getTime() + Math.round((totalDays * stage.offset[1]) / 100) * 24 * 60 * 60 * 1000);
+
+    return {
+    ...stage,
+    startDate: startDate.toLocaleDateString("es-AR"),
+    endDate: endDate.toLocaleDateString("es-AR"),
+    status: stage.progress >= 100 ? "completed" : stage.progress > 0 ? "in-progress" : "pending",
+    };
+  });
+
   return (
     <Card>
       <CardHeader>

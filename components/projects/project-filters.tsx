@@ -2,6 +2,7 @@
 
 import { useFilters } from "@/contexts/filter-context";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import {
   Select,
   SelectContent,
@@ -12,19 +13,11 @@ import {
 
 const statusOptions = [
   { value: "all", label: "Todos los estados" },
-  { value: "active", label: "Activo" },
+  { value: "in-progress", label: "En Progreso" },
+  { value: "planning", label: "En Planificación" },
   { value: "completed", label: "Completado" },
-  { value: "on-hold", label: "En espera" },
+  { value: "on-hold", label: "En Pausa" },
 ];
-
-type FilterState = {
-  status: string[];
-  type: string[];
-  date: string[];
-  searchTerm: string;
-  sortBy: string;
-};
-
 
 const typeOptions = [
   { value: "all", label: "Todos los tipos" },
@@ -40,6 +33,17 @@ const dateOptions = [
   { value: "last-90", label: "Últimos 90 días" },
 ];
 
+const sortOptions = [
+  { value: "newest", label: "Más recientes" },
+  { value: "oldest", label: "Más antiguos" },
+  { value: "budget-desc", label: "Mayor presupuesto" },
+  { value: "budget-asc", label: "Menor presupuesto" },
+  { value: "progress-desc", label: "Mayor avance" },
+  { value: "progress-asc", label: "Menor avance" },
+  { value: "name-asc", label: "Nombre (A-Z)" },
+  { value: "name-desc", label: "Nombre (Z-A)" },
+];
+
 export function ProjectFilters() {
   const { filters, setFilters } = useFilters();
 
@@ -49,7 +53,7 @@ export function ProjectFilters() {
       status: value === "all" ? [] : [value], // Mantener como arreglo
     }));
   };
-  
+
 
   const handleTypeChange = (value: string) => {
     setFilters(prev => ({
@@ -70,16 +74,30 @@ export function ProjectFilters() {
       status: [],
       type: [],
       date: [],
-      searchTerm: "", // Añadir un valor por defecto para searchTerm
-      sortBy: "",     // Añadir un valor por defecto para sortBy
+      searchTerm: "",
+      sortBy: "newest",
     });
   };
-  
 
   return (
-    <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between mb-6">
+    <div className="mb-6 flex flex-col gap-4">
+      <div className="w-full">
+        <Input
+          value={filters.searchTerm}
+          onChange={(event) =>
+            setFilters((prev) => ({
+              ...prev,
+              searchTerm: event.target.value,
+            }))
+          }
+          placeholder="Buscar por nombre o ubicación..."
+        />
+      </div>
       <div className="flex flex-col sm:flex-row gap-4">
-        <Select onValueChange={handleStatusChange}>
+        <Select
+          value={filters.status[0] ?? "all"}
+          onValueChange={handleStatusChange}
+        >
           <SelectTrigger className="w-[180px]">
             <SelectValue placeholder="Estado" />
           </SelectTrigger>
@@ -92,7 +110,7 @@ export function ProjectFilters() {
           </SelectContent>
         </Select>
 
-        <Select onValueChange={handleTypeChange}>
+        <Select value={filters.type[0] ?? "all"} onValueChange={handleTypeChange}>
           <SelectTrigger className="w-[180px]">
             <SelectValue placeholder="Tipo" />
           </SelectTrigger>
@@ -105,7 +123,7 @@ export function ProjectFilters() {
           </SelectContent>
         </Select>
 
-        <Select onValueChange={handleDateChange}>
+        <Select value={filters.date[0] ?? "all"} onValueChange={handleDateChange}>
           <SelectTrigger className="w-[180px]">
             <SelectValue placeholder="Fecha" />
           </SelectTrigger>
@@ -117,15 +135,38 @@ export function ProjectFilters() {
             ))}
           </SelectContent>
         </Select>
+
+        <Select
+          value={filters.sortBy || "newest"}
+          onValueChange={(value) =>
+            setFilters((prev) => ({
+              ...prev,
+              sortBy: value,
+            }))
+          }
+        >
+          <SelectTrigger className="w-[220px]">
+            <SelectValue placeholder="Ordenar por" />
+          </SelectTrigger>
+          <SelectContent>
+            {sortOptions.map((option) => (
+              <SelectItem key={option.value} value={option.value}>
+                {option.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </div>
 
-      <Button
-        variant="outline"
-        onClick={clearFilters}
-        className="w-full sm:w-auto"
-      >
-        Limpiar filtros
-      </Button>
+      <div className="flex justify-end">
+        <Button
+          variant="outline"
+          onClick={clearFilters}
+          className="w-full sm:w-auto"
+        >
+          Limpiar filtros
+        </Button>
+      </div>
     </div>
   );
 }
