@@ -207,6 +207,34 @@ alter table public.reports enable row level security;
 alter table public.transactions enable row level security;
 alter table public.monthly_cashflow enable row level security;
 
+-- ===========
+-- Budgets
+-- ===========
+create table if not exists public.project_budgets (
+  id text primary key,
+  project_id bigint not null references public.projects(id) on delete cascade,
+  version integer not null,
+  label text not null,
+  description text not null,
+  created_at timestamptz not null default now()
+);
+
+create table if not exists public.project_budget_items (
+  id text primary key,
+  budget_id text not null references public.project_budgets(id) on delete cascade,
+  category text not null check (category in ('materials', 'labor', 'equipment', 'services', 'subcontracts', 'permits', 'contingency')),
+  description text not null,
+  unit text not null,
+  qty_planned numeric(14,2) not null default 0,
+  price_unit_planned numeric(14,2) not null default 0,
+  qty_actual numeric(14,2) not null default 0,
+  price_unit_actual numeric(14,2) not null default 0,
+  created_at timestamptz not null default now()
+);
+
+alter table public.project_budgets enable row level security;
+alter table public.project_budget_items enable row level security;
+
 do $$
 declare
   tbl text;
@@ -218,7 +246,9 @@ begin
     'employee_projects',
     'reports',
     'transactions',
-    'monthly_cashflow'
+    'monthly_cashflow',
+    'project_budgets',
+    'project_budget_items'
   ] loop
     -- Select policy
     if not exists (
