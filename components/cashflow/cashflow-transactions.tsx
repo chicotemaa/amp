@@ -8,6 +8,7 @@ import { ArrowUpCircle, ArrowDownCircle } from "lucide-react";
 import { getTransactionsDb } from "@/lib/api/cashflow";
 import { TRANSACTION_CATEGORY_LABELS, Transaction } from "@/lib/types/cashflow";
 import { useEffect, useState, useCallback } from "react";
+import { useFilters } from "@/contexts/filter-context";
 
 const fmt = (n: number) =>
   new Intl.NumberFormat("es-AR", {
@@ -19,11 +20,18 @@ const fmt = (n: number) =>
 export function CashflowTransactions() {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const { filters } = useFilters();
 
   const fetchTransactions = useCallback(async () => {
     setIsLoading(true);
     try {
-      const data = await getTransactionsDb();
+      let data = await getTransactionsDb();
+      if (filters.status && filters.status.length > 0 && !filters.status.includes("all")) {
+        data = data.filter((t) => t.projectId != null && filters.status.includes(t.projectId.toString()));
+      }
+      if (filters.type && filters.type.length > 0 && !filters.type.includes("all")) {
+        data = data.filter((t) => filters.type.includes(t.type) || filters.type.includes("all"));
+      }
       setTransactions(data);
     } catch (err: any) {
       console.error(err);

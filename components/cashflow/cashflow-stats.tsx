@@ -1,8 +1,13 @@
+"use client";
+
+import { useEffect, useState, useCallback } from "react";
 import {
   Card, CardContent, CardHeader, CardTitle,
 } from "@/components/ui/card";
 import { ArrowUpCircle, ArrowDownCircle, Percent, TrendingUp } from "lucide-react";
-import { getCashflowStats } from "@/lib/api/cashflow";
+import { getTransactionsDb } from "@/lib/api/cashflow";
+import { Transaction } from "@/lib/types/cashflow";
+import { useFilters } from "@/contexts/filter-context";
 
 const fmt = (n: number) =>
   new Intl.NumberFormat("es-AR", {
@@ -12,7 +17,60 @@ const fmt = (n: number) =>
   }).format(n);
 
 export function CashflowStats() {
-  const { totalIncome, totalExpenses, margin, projectedNextMonth } = getCashflowStats();
+  const [stats, setStats] = useState({
+    totalIncome: 0,
+    totalExpenses: 0,
+    netBalance: 0,
+    margin: 0,
+    projectedNextMonth: 0,
+  });
+  const [isLoading, setIsLoading] = useState(true);
+  const { filters } = useFilters();
+
+  const fetchStats = useCallback(async () => {
+    try {
+      const allData = await getTransactionsDb();
+
+      let data = allData;
+      // Filter by Project matching the logic standard
+      if (filters.status && filters.status.length > 0 && !filters.status.includes("all")) {
+        data = data.filter((t) => t.projectId != null && filters.status.includes(t.projectId.toString()));
+      }
+
+      const income = data.filter((t) => t.type === "ingreso");
+      const expenses = data.filter((t) => t.type === "egreso");
+
+      const totalIncome = income.reduce((sum, t) => sum + t.amount, 0);
+      const totalExpenses = expenses.reduce((sum, t) => sum + t.amount, 0);
+      const netBalance = totalIncome - totalExpenses;
+      const margin = totalIncome > 0 ? ((netBalance / totalIncome) * 100) : 0;
+      const projectedNextMonth = Math.round(netBalance * 1.2);
+
+      setStats({
+        totalIncome,
+        totalExpenses,
+        netBalance,
+        margin: Math.round(margin * 10) / 10,
+        projectedNextMonth,
+      });
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [filters]);
+
+  useEffect(() => {
+    fetchStats();
+
+    const handleTransactionCreated = () => {
+      fetchStats();
+    };
+    window.addEventListener("transactionCreated", handleTransactionCreated);
+    return () => window.removeEventListener("transactionCreated", handleTransactionCreated);
+  }, [fetchStats]);
+
+  const { totalIncome, totalExpenses, margin, projectedNextMonth } = stats;
 
   const cards = [
     {
@@ -56,7 +114,9 @@ export function CashflowStats() {
               <Icon className={`h-4 w-4 ${card.iconClass}`} />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{card.value}</div>
+              <div className="text-2xl font-bold">
+                {isLoading ? "..." : card.value}
+              </div>
               <p className="text-xs text-muted-foreground">{card.description}</p>
             </CardContent>
           </Card>

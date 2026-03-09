@@ -13,10 +13,10 @@ import { getResourceUtilization } from "@/lib/api/employees";
 ChartJS.register(ArcElement, Tooltip, Legend);
 
 const DEPT_COLORS: Record<string, string> = {
-  Diseño: "hsl(var(--success))",
-  Ingeniería: "hsl(var(--warning))",
-  Construcción: "hsl(var(--primary))",
-  Gestión: "hsl(var(--secondary))",
+  Diseño: "#3b82f6",      // Blue
+  Ingeniería: "#f59e0b",  // Amber
+  Construcción: "#10b981",// Emerald
+  Gestión: "#8b5cf6",     // Violet
 };
 
 export function ResourceUtilization() {
