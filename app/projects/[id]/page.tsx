@@ -11,6 +11,7 @@ import { getCurrentRoleServer } from "@/lib/supabase/auth-server";
 import { canAccessBudget, isFieldRole } from "@/lib/auth/roles";
 import { DailyProgressForm } from "@/components/projects/project-detail/daily-progress-form";
 import { IncidentReporter } from "@/components/projects/project-detail/incident-reporter";
+import { ChangeOrdersBoard } from "@/components/projects/project-detail/change-orders-board";
 
 export const metadata: Metadata = {
   title: "Detalle de Proyecto | ArquiManagerPro",
@@ -31,6 +32,7 @@ export async function generateStaticParams() {
 export default async function ProjectDetailPage({ params }: { params: { id: string } }) {
   const role = await getCurrentRoleServer();
   const showBudget = canAccessBudget(role);
+  const showChangeOrders = role === "operator" || role === "pm";
   const prioritizeFieldOps = isFieldRole(role);
 
   return (
@@ -43,6 +45,9 @@ export default async function ProjectDetailPage({ params }: { params: { id: stri
           <TabsTrigger value="team">Equipo</TabsTrigger>
           <TabsTrigger value="documents">Documentos</TabsTrigger>
           {showBudget ? <TabsTrigger value="budget">Presupuesto</TabsTrigger> : null}
+          {showChangeOrders ? (
+            <TabsTrigger value="change-orders">Ordenes de Cambio</TabsTrigger>
+          ) : null}
           <TabsTrigger value="progress">Avance</TabsTrigger>
         </TabsList>
         <TabsContent value="overview">
@@ -60,6 +65,11 @@ export default async function ProjectDetailPage({ params }: { params: { id: stri
         {showBudget ? (
           <TabsContent value="budget">
             <BudgetModule projectId={params.id} />
+          </TabsContent>
+        ) : null}
+        {showChangeOrders ? (
+          <TabsContent value="change-orders">
+            <ChangeOrdersBoard projectId={params.id} role={role} />
           </TabsContent>
         ) : null}
         <TabsContent value="progress">
