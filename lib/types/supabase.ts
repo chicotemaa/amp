@@ -578,6 +578,9 @@ export interface Database {
           requested_by: number | null;
           approved_by: number | null;
           approved_at: string | null;
+          operator_reviewed_at: string | null;
+          client_comment: string | null;
+          client_reviewed_at: string | null;
           created_at: string;
         };
         Insert: {
@@ -590,6 +593,9 @@ export interface Database {
           requested_by?: number | null;
           approved_by?: number | null;
           approved_at?: string | null;
+          operator_reviewed_at?: string | null;
+          client_comment?: string | null;
+          client_reviewed_at?: string | null;
           created_at?: string;
         };
         Update: {
@@ -602,6 +608,9 @@ export interface Database {
           requested_by?: number | null;
           approved_by?: number | null;
           approved_at?: string | null;
+          operator_reviewed_at?: string | null;
+          client_comment?: string | null;
+          client_reviewed_at?: string | null;
           created_at?: string;
         };
         Relationships: [];
