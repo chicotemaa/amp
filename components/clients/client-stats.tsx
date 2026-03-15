@@ -1,26 +1,50 @@
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+"use client";
+
+import { useEffect, useState } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Users, UserPlus, Building, Bell } from "lucide-react";
-import { getClientStats } from "@/lib/api/clients";
+import { getClientStatsDb } from "@/lib/api/clients";
 
 export function ClientStats() {
-  const { total, active, potential, totalProjects } = getClientStats();
+  const [clientStats, setClientStats] = useState({
+    total: 0,
+    active: 0,
+    potential: 0,
+    totalProjects: 0,
+  });
+  const [isLoading, setIsLoading] = useState(true);
 
-  const stats = [
+  useEffect(() => {
+    let mounted = true;
+
+    getClientStatsDb()
+      .then((nextStats) => {
+        if (!mounted) return;
+        setClientStats(nextStats);
+      })
+      .finally(() => {
+        if (mounted) setIsLoading(false);
+      });
+
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
+  const { total, active, potential, totalProjects } = clientStats;
+  const activeRatio = total > 0 ? Math.round((active / total) * 100) : 0;
+
+  const cards = [
     {
       title: "Total Clientes",
       value: String(total),
-      description: "+1 este mes",
+      description: "Clientes registrados",
       icon: Users,
     },
     {
       title: "Clientes Activos",
       value: String(active),
-      description: `${Math.round((active / total) * 100)}% del total`,
+      description: `${activeRatio}% del total`,
       icon: UserPlus,
     },
     {
@@ -39,7 +63,7 @@ export function ClientStats() {
 
   return (
     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-      {stats.map((stat) => {
+      {cards.map((stat) => {
         const Icon = stat.icon;
         return (
           <Card key={stat.title}>
@@ -48,7 +72,7 @@ export function ClientStats() {
               <Icon className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{stat.value}</div>
+              <div className="text-2xl font-bold">{isLoading ? "..." : stat.value}</div>
               <p className="text-xs text-muted-foreground">{stat.description}</p>
             </CardContent>
           </Card>

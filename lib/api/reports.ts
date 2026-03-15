@@ -16,7 +16,7 @@ export async function getReportsDb(): Promise<Report[]> {
 
     if (reportsError) {
         console.error("Supabase reports error:", reportsError.message);
-        return [...REPORTS];
+        return [];
     }
 
     const projectsMap = new Map<number, string>(

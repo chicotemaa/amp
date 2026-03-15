@@ -2,6 +2,7 @@ import { PROJECTS } from "@/lib/data/projects";
 import { Project, ProjectStats } from "@/lib/types/project";
 import { supabase } from "@/lib/supabase";
 import type { Database } from "@/lib/types/supabase";
+import { logCurrentUserAuditEvent } from "@/lib/api/audit";
 
 type ProjectRow = Database["public"]["Tables"]["projects"]["Row"];
 
@@ -28,7 +29,7 @@ export async function getProjectsDb(): Promise<Project[]> {
     const { data, error } = await supabase.from("projects").select("*");
     if (error) {
         console.error("Supabase projects error:", error.message);
-        return PROJECTS;
+        return [];
     }
     return (data as ProjectRow[]).map(mapProjectRow);
 }
@@ -124,7 +125,7 @@ export async function createProject(input: CreateProjectInput): Promise<Project>
             team_size: input.teamSize,
             budget: input.budget,
             image: input.image,
-            client_id: input.clientId,
+            client_id: input.clientId > 0 ? input.clientId : null,
             description: input.description,
             progress: 0,
             on_track: true,
@@ -132,12 +133,32 @@ export async function createProject(input: CreateProjectInput): Promise<Project>
         .select()
         .single();
 
+    const row = data as ProjectRow | null;
+
     if (error) {
         console.error("Error creating project:", error.message);
         throw new Error("No se pudo crear el proyecto.");
     }
 
-    return mapProjectRow(data as ProjectRow);
+    if (!row) {
+        throw new Error("No se pudo crear el proyecto.");
+    }
+
+    await logCurrentUserAuditEvent({
+        entityType: "project",
+        entityId: String(row.id),
+        projectId: row.id,
+        action: "create",
+        fromState: null,
+        toState: row.status ?? "planning",
+        metadata: {
+            name: row.name,
+            clientId: row.client_id,
+            budget: row.budget,
+        },
+    });
+
+    return mapProjectRow(row);
 }
 
 export async function updateProject(id: number, input: Partial<Project>): Promise<Project> {
@@ -156,6 +177,12 @@ export async function updateProject(id: number, input: Partial<Project>): Promis
     if (input.onTrack !== undefined) updates.on_track = input.onTrack;
     if (input.description !== undefined) updates.description = input.description;
 
+    const { data: currentData } = await supabase
+        .from("projects")
+        .select("*")
+        .eq("id", id)
+        .single();
+
     const { data, error } = await supabase
         .from("projects")
         .update(updates)
@@ -167,6 +194,19 @@ export async function updateProject(id: number, input: Partial<Project>): Promis
         console.error("Error updating project:", error.message);
         throw new Error("No se pudo actualizar el proyecto.");
     }
+
+    const current = currentData as ProjectRow | null;
+    await logCurrentUserAuditEvent({
+        entityType: "project",
+        entityId: String(id),
+        projectId: id,
+        action: "update",
+        fromState: current?.status ?? null,
+        toState: (data as ProjectRow).status ?? current?.status ?? null,
+        metadata: {
+            changedFields: Object.keys(updates),
+        },
+    });
 
     return mapProjectRow(data as ProjectRow);
 }

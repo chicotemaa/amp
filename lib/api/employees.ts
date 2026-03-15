@@ -29,7 +29,7 @@ export async function getEmployeesDb(): Promise<Employee[]> {
 
     if (employeesError || linksError) {
         console.error("Supabase employees error:", employeesError?.message ?? linksError?.message);
-        return EMPLOYEES;
+        return [];
     }
 
     const links = linksData as EmployeeProjectRow[];
@@ -63,6 +63,19 @@ export async function getEmployeesByProjectDb(projectId: number): Promise<Employ
     if (employeesError || !employeesData) return [];
 
     return (employeesData as EmployeeRow[]).map(row => mapEmployeeRow(row, [projectId]));
+}
+
+export async function getEmployeeStatsDb() {
+    const employees = await getEmployeesDb();
+    const total = employees.length;
+    const active = employees.filter((employee) => employee.status !== "Inactivo").length;
+    const inProject = employees.filter((employee) => employee.projectIds.length > 0).length;
+    const hoursThisWeek = employees.reduce((sum, employee) => sum + employee.hoursThisWeek, 0);
+    const activeProjectIds = new Set(
+        employees.flatMap((employee) => employee.projectIds)
+    );
+
+    return { total, active, inProject, hoursThisWeek, activeProjects: activeProjectIds.size };
 }
 
 export function getEmployees(): Employee[] {
