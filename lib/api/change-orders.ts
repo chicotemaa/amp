@@ -1,6 +1,7 @@
 import { supabase } from "@/lib/supabase";
 import type { Database } from "@/lib/types/supabase";
 import type { ChangeOrder, ChangeOrderStatus } from "@/lib/types/change-order";
+import { logCurrentUserAuditEvent } from "@/lib/api/audit";
 
 type ChangeOrderRow = Database["public"]["Tables"]["change_orders"]["Row"];
 type ChangeOrderUpdate = Database["public"]["Tables"]["change_orders"]["Update"];
@@ -62,15 +63,41 @@ export async function createChangeOrderDb(input: CreateChangeOrderInput): Promis
     .select("*")
     .single();
 
+  const row = data as ChangeOrderRow | null;
+
   if (error) {
     console.error("Error creating change order:", error.message);
     throw new Error("No se pudo crear la orden de cambio.");
   }
 
-  return mapChangeOrder(data as ChangeOrderRow);
+  if (!row) {
+    throw new Error("No se pudo crear la orden de cambio.");
+  }
+
+  await logCurrentUserAuditEvent({
+    entityType: "change_order",
+    entityId: row.id,
+    projectId: input.projectId,
+    action: "create",
+    fromState: null,
+    toState: "draft",
+    metadata: {
+      amountDelta: input.amountDelta,
+      daysDelta: input.daysDelta,
+      requestedBy: input.requestedBy ?? null,
+    },
+  });
+
+  return mapChangeOrder(row);
 }
 
 export async function submitChangeOrderToOperatorDb(id: string): Promise<ChangeOrder> {
+  const { data: currentData } = await supabase
+    .from("change_orders")
+    .select("*")
+    .eq("id", id)
+    .single();
+
   const updates: ChangeOrderUpdate = { status: "pending_operator" };
   const { data, error } = await supabase
     .from("change_orders")
@@ -84,6 +111,17 @@ export async function submitChangeOrderToOperatorDb(id: string): Promise<ChangeO
     throw new Error("No se pudo enviar la orden al operador.");
   }
 
+  const current = currentData as ChangeOrderRow | null;
+  await logCurrentUserAuditEvent({
+    entityType: "change_order",
+    entityId: id,
+    projectId: current?.project_id ?? null,
+    action: "submit_to_operator",
+    fromState: current?.status ?? null,
+    toState: "pending_operator",
+    metadata: {},
+  });
+
   return mapChangeOrder(data as ChangeOrderRow);
 }
 
@@ -91,6 +129,12 @@ export async function reviewChangeOrderByOperatorDb(
   id: string,
   approvedBy: number | null
 ): Promise<ChangeOrder> {
+  const { data: currentData } = await supabase
+    .from("change_orders")
+    .select("*")
+    .eq("id", id)
+    .single();
+
   const updates: ChangeOrderUpdate = {
     status: "pending_client",
     approved_by: approvedBy,
@@ -108,6 +152,19 @@ export async function reviewChangeOrderByOperatorDb(
     console.error("Error operator-reviewing change order:", error.message);
     throw new Error("No se pudo visado por operador.");
   }
+
+  const current = currentData as ChangeOrderRow | null;
+  await logCurrentUserAuditEvent({
+    entityType: "change_order",
+    entityId: id,
+    projectId: current?.project_id ?? null,
+    action: "review_by_operator",
+    fromState: current?.status ?? null,
+    toState: "pending_client",
+    metadata: {
+      approvedBy,
+    },
+  });
 
   return mapChangeOrder(data as ChangeOrderRow);
 }
@@ -187,6 +244,19 @@ export async function decideChangeOrderByClientDb(
     }
   }
 
+  await logCurrentUserAuditEvent({
+    entityType: "change_order",
+    entityId: id,
+    projectId: order.project_id,
+    action: "client_decision",
+    fromState: order.status,
+    toState: decision,
+    metadata: {
+      clientComment: clientComment ?? null,
+      amountDelta: order.amount_delta,
+      daysDelta: order.days_delta,
+    },
+  });
+
   return mapChangeOrder(updatedOrderData as ChangeOrderRow);
 }
-

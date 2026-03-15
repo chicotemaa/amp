@@ -7,84 +7,93 @@ import { ProgressReport } from "@/components/projects/project-detail/progress-re
 import { BudgetModule } from "@/components/projects/budget/budget-module";
 import { DocumentsModule } from "@/components/projects/documents/documents-module";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { getCurrentRoleServer } from "@/lib/supabase/auth-server";
-import { canAccessBudget, isFieldRole } from "@/lib/auth/roles";
+import { getCurrentRoleServer, getEffectiveUiRoleServer } from "@/lib/supabase/auth-server";
+import { getRoleLabel, getVisibleProjectTabs, isFieldRole } from "@/lib/auth/roles";
 import { DailyProgressForm } from "@/components/projects/project-detail/daily-progress-form";
 import { IncidentReporter } from "@/components/projects/project-detail/incident-reporter";
 import { ChangeOrdersBoard } from "@/components/projects/project-detail/change-orders-board";
+import { assertProjectAccess } from "@/lib/auth/server-guards";
+
+export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: "Detalle de Proyecto | ArquiManagerPro",
   description: "Información detallada del proyecto",
 };
 
-export async function generateStaticParams() {
-  return [
-    { id: "1" },
-    { id: "2" },
-    { id: "3" },
-    { id: "4" },
-    { id: "5" },
-    { id: "6" },
-  ];
-}
-
 export default async function ProjectDetailPage({ params }: { params: { id: string } }) {
   const role = await getCurrentRoleServer();
-  const showBudget = canAccessBudget(role);
-  const showChangeOrders = role === "operator" || role === "pm";
-  const prioritizeFieldOps = isFieldRole(role);
+  const uiRole = await getEffectiveUiRoleServer();
+  await assertProjectAccess(Number(params.id));
+  const visibleTabs = getVisibleProjectTabs(uiRole);
+  const prioritizeFieldOps = isFieldRole(uiRole);
+  const defaultTab = prioritizeFieldOps ? "progress" : visibleTabs[0] ?? "overview";
 
   return (
     <div className="container mx-auto py-8">
-      <ProjectHeader projectId={params.id} />
-      <Tabs defaultValue={prioritizeFieldOps ? "progress" : "overview"} className="mt-8">
+      <ProjectHeader projectId={params.id} role={uiRole} />
+      {uiRole && uiRole !== role ? (
+        <p className="mt-4 text-sm text-muted-foreground">
+          Vista simulada: {getRoleLabel(uiRole)}
+        </p>
+      ) : null}
+      <Tabs defaultValue={defaultTab} className="mt-8">
         <TabsList className="flex-wrap h-auto gap-1">
-          <TabsTrigger value="overview">Resumen</TabsTrigger>
-          <TabsTrigger value="timeline">Cronograma</TabsTrigger>
-          <TabsTrigger value="team">Equipo</TabsTrigger>
-          <TabsTrigger value="documents">Documentos</TabsTrigger>
-          {showBudget ? <TabsTrigger value="budget">Presupuesto</TabsTrigger> : null}
-          {showChangeOrders ? (
+          {visibleTabs.includes("overview") ? <TabsTrigger value="overview">Resumen</TabsTrigger> : null}
+          {visibleTabs.includes("timeline") ? <TabsTrigger value="timeline">Cronograma</TabsTrigger> : null}
+          {visibleTabs.includes("team") ? <TabsTrigger value="team">Equipo</TabsTrigger> : null}
+          {visibleTabs.includes("documents") ? <TabsTrigger value="documents">Documentos</TabsTrigger> : null}
+          {visibleTabs.includes("budget") ? <TabsTrigger value="budget">Presupuesto</TabsTrigger> : null}
+          {visibleTabs.includes("change-orders") ? (
             <TabsTrigger value="change-orders">Ordenes de Cambio</TabsTrigger>
           ) : null}
-          <TabsTrigger value="progress">Avance</TabsTrigger>
+          {visibleTabs.includes("progress") ? <TabsTrigger value="progress">Avance</TabsTrigger> : null}
         </TabsList>
-        <TabsContent value="overview">
-          <ProjectOverview projectId={params.id} />
-        </TabsContent>
-        <TabsContent value="timeline">
-          <ProjectTimeline projectId={params.id} />
-        </TabsContent>
-        <TabsContent value="team">
-          <ProjectTeam projectId={params.id} />
-        </TabsContent>
-        <TabsContent value="documents">
-          <DocumentsModule projectId={params.id} />
-        </TabsContent>
-        {showBudget ? (
+        {visibleTabs.includes("overview") ? (
+          <TabsContent value="overview">
+            <ProjectOverview projectId={params.id} />
+          </TabsContent>
+        ) : null}
+        {visibleTabs.includes("timeline") ? (
+          <TabsContent value="timeline">
+            <ProjectTimeline projectId={params.id} />
+          </TabsContent>
+        ) : null}
+        {visibleTabs.includes("team") ? (
+          <TabsContent value="team">
+            <ProjectTeam projectId={params.id} />
+          </TabsContent>
+        ) : null}
+        {visibleTabs.includes("documents") ? (
+          <TabsContent value="documents">
+            <DocumentsModule projectId={params.id} />
+          </TabsContent>
+        ) : null}
+        {visibleTabs.includes("budget") ? (
           <TabsContent value="budget">
             <BudgetModule projectId={params.id} />
           </TabsContent>
         ) : null}
-        {showChangeOrders ? (
+        {visibleTabs.includes("change-orders") ? (
           <TabsContent value="change-orders">
-            <ChangeOrdersBoard projectId={params.id} role={role} />
+            <ChangeOrdersBoard projectId={params.id} role={uiRole} />
           </TabsContent>
         ) : null}
-        <TabsContent value="progress">
-          {prioritizeFieldOps ? (
-            <div className="grid gap-6 lg:grid-cols-2">
-              <DailyProgressForm projectId={params.id} />
-              <IncidentReporter projectId={params.id} />
-              <div className="lg:col-span-2">
-                <ProgressReport projectId={params.id} />
+        {visibleTabs.includes("progress") ? (
+          <TabsContent value="progress">
+            {prioritizeFieldOps ? (
+              <div className="grid gap-6 lg:grid-cols-2">
+                <DailyProgressForm projectId={params.id} />
+                <IncidentReporter projectId={params.id} />
+                <div className="lg:col-span-2">
+                  <ProgressReport projectId={params.id} role={uiRole} />
+                </div>
               </div>
-            </div>
-          ) : (
-            <ProgressReport projectId={params.id} />
-          )}
-        </TabsContent>
+            ) : (
+              <ProgressReport projectId={params.id} role={uiRole} />
+            )}
+          </TabsContent>
+        ) : null}
       </Tabs>
     </div>
   );

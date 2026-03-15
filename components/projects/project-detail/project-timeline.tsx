@@ -2,22 +2,35 @@
 
 import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { getProjectByIdDb } from "@/lib/api/projects";
-import { Project } from "@/lib/types/project";
+import { Badge } from "@/components/ui/badge";
+import { getMilestonesByProjectDb, getProjectPhasesDb } from "@/lib/api/progress";
+import type { Milestone, ProjectPhase } from "@/lib/types/progress";
 
 interface ProjectTimelineProps {
   projectId: string;
 }
 
 export function ProjectTimeline({ projectId }: ProjectTimelineProps) {
-  const [project, setProject] = useState<Project | null>(null);
+  const [phases, setPhases] = useState<ProjectPhase[]>([]);
+  const [milestones, setMilestones] = useState<Milestone[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    getProjectByIdDb(Number(projectId)).then(p => {
-      setProject(p);
+    let mounted = true;
+
+    Promise.all([
+      getProjectPhasesDb(Number(projectId)),
+      getMilestonesByProjectDb(Number(projectId)),
+    ]).then(([phaseData, milestoneData]) => {
+      if (!mounted) return;
+      setPhases(phaseData);
+      setMilestones(milestoneData);
       setLoading(false);
     });
+
+    return () => {
+      mounted = false;
+    };
   }, [projectId]);
 
   if (loading) {
@@ -32,51 +45,20 @@ export function ProjectTimeline({ projectId }: ProjectTimelineProps) {
       </Card>
     );
   }
-  if (!project) {
+  if (phases.length === 0 && milestones.length === 0) {
     return (
       <Card>
         <CardHeader>
           <CardTitle>Cronograma del Proyecto</CardTitle>
         </CardHeader>
         <CardContent>
-          <p className="text-sm text-muted-foreground">Proyecto no encontrado.</p>
+          <p className="text-sm text-muted-foreground">
+            No hay fases ni hitos configurados para este proyecto.
+          </p>
         </CardContent>
       </Card>
     );
   }
-
-  const start = new Date(project.startDate);
-  const end = new Date(project.endDate);
-  const durationDays = Math.max(
-    1,
-    Math.round((end.getTime() - start.getTime()) / (24 * 60 * 60 * 1000))
-  );
-  const milestoneDate = (ratio: number) =>
-    new Date(start.getTime() + Math.floor(durationDays * ratio) * 24 * 60 * 60 * 1000);
-  const formatDate = (date: Date) => date.toLocaleDateString("es-AR");
-
-  const timelineEvents = [
-    {
-      date: formatDate(start),
-      title: "Inicio del proyecto",
-      description: `Inicio oficial de ${project.name}.`,
-    },
-    {
-      date: formatDate(milestoneDate(0.3)),
-      title: "Hito de diseño y aprobaciones",
-      description: "Cierre de etapa de diseño y validaciones técnicas.",
-    },
-    {
-      date: formatDate(milestoneDate(0.6)),
-      title: "Ejecución principal de obra",
-      description: "Seguimiento de estructura, costos y avance acumulado.",
-    },
-    {
-      date: formatDate(end),
-      title: "Fecha objetivo de cierre",
-      description: "Finalización planificada del proyecto.",
-    },
-  ];
 
   return (
     <Card>
@@ -84,20 +66,50 @@ export function ProjectTimeline({ projectId }: ProjectTimelineProps) {
         <CardTitle>Cronograma del Proyecto</CardTitle>
       </CardHeader>
       <CardContent>
-        <div className="space-y-8">
-          {timelineEvents.map((event, index) => (
-            <div key={index} className="flex gap-4">
-              <div className="relative flex flex-col items-center">
-                <div className="absolute h-full w-px bg-border" />
-                <div className="relative h-2 w-2 rounded-full bg-primary" />
-              </div>
-              <div className="flex-1 space-y-1">
-                <p className="text-sm text-muted-foreground">{event.date}</p>
-                <h4 className="font-medium leading-none">{event.title}</h4>
-                <p className="text-sm text-muted-foreground">{event.description}</p>
-              </div>
-            </div>
-          ))}
+        <div className="grid gap-6 lg:grid-cols-2">
+          <div className="space-y-4">
+            <h4 className="text-sm font-medium">Fases</h4>
+            {phases
+              .sort((a, b) => a.phaseOrder - b.phaseOrder)
+              .map((phase) => (
+                <div key={phase.id} className="rounded-md border p-3 space-y-1">
+                  <div className="flex items-center justify-between gap-2">
+                    <p className="font-medium">
+                      {phase.phaseOrder}. {phase.name}
+                    </p>
+                    <Badge variant="outline">{phase.actualProgress}% real</Badge>
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    Plan: {phase.plannedProgress}% ·
+                    Inicio: {phase.startDate ? new Date(phase.startDate).toLocaleDateString("es-AR") : "Sin fecha"} ·
+                    Cierre: {phase.endDate ? new Date(phase.endDate).toLocaleDateString("es-AR") : "Sin fecha"}
+                  </p>
+                </div>
+              ))}
+          </div>
+
+          <div className="space-y-4">
+            <h4 className="text-sm font-medium">Hitos</h4>
+            {milestones
+              .sort((a, b) => a.dueDate.localeCompare(b.dueDate))
+              .map((milestone) => (
+                <div key={milestone.id} className="flex gap-4">
+                  <div className="relative flex flex-col items-center">
+                    <div className="absolute h-full w-px bg-border" />
+                    <div className="relative h-2 w-2 rounded-full bg-primary" />
+                  </div>
+                  <div className="flex-1 space-y-1">
+                    <div className="flex items-center justify-between gap-2">
+                      <h4 className="font-medium leading-none">{milestone.name}</h4>
+                      <Badge variant="outline">{milestone.status}</Badge>
+                    </div>
+                    <p className="text-sm text-muted-foreground">
+                      Objetivo: {new Date(milestone.dueDate).toLocaleDateString("es-AR")}
+                    </p>
+                  </div>
+                </div>
+              ))}
+          </div>
         </div>
       </CardContent>
     </Card>

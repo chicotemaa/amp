@@ -15,6 +15,8 @@ import { TRANSACTION_CATEGORY_LABELS } from "@/lib/types/cashflow";
 import { createTransaction, getTransactionsDb } from "@/lib/api/cashflow";
 import { getProjectByIdDb } from "@/lib/api/projects";
 import { getMaterialsByProjectDb } from "@/lib/api/materials";
+import { getRevenueOverviewByProjectDb } from "@/lib/api/revenue";
+import type { RevenueSummary } from "@/lib/types/revenue";
 
 interface BudgetCoordinationPanelProps {
   projectId: string;
@@ -38,6 +40,14 @@ export function BudgetCoordinationPanel({
   const [materialsCount, setMaterialsCount] = useState(0);
   const [materialsLowStockCount, setMaterialsLowStockCount] = useState(0);
   const [projectName, setProjectName] = useState<string>("Proyecto");
+  const [revenueSummary, setRevenueSummary] = useState<RevenueSummary>({
+    totalCertificates: 0,
+    certifiedAmount: 0,
+    collectedAmount: 0,
+    pendingAmount: 0,
+    overdueAmount: 0,
+    partiallyCollectedCount: 0,
+  });
   const [loading, setLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -56,10 +66,11 @@ export function BudgetCoordinationPanel({
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      const [allTx, materials, project] = await Promise.all([
+      const [allTx, materials, project, revenue] = await Promise.all([
         getTransactionsDb(),
         getMaterialsByProjectDb(Number(projectId)),
         getProjectByIdDb(Number(projectId)),
+        getRevenueOverviewByProjectDb(Number(projectId)),
       ]);
 
       setTransactions(allTx.filter((tx) => tx.projectId === Number(projectId)));
@@ -68,6 +79,7 @@ export function BudgetCoordinationPanel({
         materials.filter((material) => material.currentStock <= material.reorderPoint).length
       );
       setProjectName(project?.name ?? `Proyecto ${projectId}`);
+      setRevenueSummary(revenue.summary);
     } finally {
       setLoading(false);
     }
@@ -75,6 +87,24 @@ export function BudgetCoordinationPanel({
 
   useEffect(() => {
     void load();
+
+    const handleUpdated = () => {
+      void load();
+    };
+
+    window.addEventListener("transactionCreated", handleUpdated);
+    window.addEventListener("projectLaborUpdated", handleUpdated);
+    window.addEventListener("projectProcurementUpdated", handleUpdated);
+    window.addEventListener("projectRevenueUpdated", handleUpdated);
+    window.addEventListener("projectMaterialsUpdated", handleUpdated);
+
+    return () => {
+      window.removeEventListener("transactionCreated", handleUpdated);
+      window.removeEventListener("projectLaborUpdated", handleUpdated);
+      window.removeEventListener("projectProcurementUpdated", handleUpdated);
+      window.removeEventListener("projectRevenueUpdated", handleUpdated);
+      window.removeEventListener("projectMaterialsUpdated", handleUpdated);
+    };
   }, [load]);
 
   const totals = useMemo(() => {
@@ -171,7 +201,7 @@ export function BudgetCoordinationPanel({
 
   return (
     <div className="grid gap-6">
-      <div className="grid gap-4 md:grid-cols-3">
+      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
         <Card>
           <CardHeader>
             <CardTitle className="text-base">Control Presupuestario</CardTitle>
@@ -213,6 +243,22 @@ export function BudgetCoordinationPanel({
             <p>Con stock crítico: <strong>{materialsLowStockCount}</strong></p>
             <Badge variant={materialsLowStockCount > 0 ? "destructive" : "secondary"}>
               {materialsLowStockCount > 0 ? "Requiere reposición" : "Stock estable"}
+            </Badge>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">Certificación y Cobro</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-1 text-sm">
+            <p>Certificado: <strong>{money(revenueSummary.certifiedAmount)}</strong></p>
+            <p>Cobrado: <strong>{money(revenueSummary.collectedAmount)}</strong></p>
+            <p>Pendiente: <strong>{money(revenueSummary.pendingAmount)}</strong></p>
+            <Badge variant={revenueSummary.overdueAmount > 0 ? "destructive" : "secondary"}>
+              {revenueSummary.overdueAmount > 0
+                ? `${money(revenueSummary.overdueAmount)} vencido`
+                : "Cobranza al día"}
             </Badge>
           </CardContent>
         </Card>

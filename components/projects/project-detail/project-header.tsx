@@ -10,12 +10,14 @@ import { getProjectByIdDb } from "@/lib/api/projects";
 import { getClientByIdDb } from "@/lib/api/clients";
 import { PROJECT_STATUS_LABELS, PROJECT_STATUS_COLORS, Project } from "@/lib/types/project";
 import { Client } from "@/lib/types/client";
+import { can, type AppRole } from "@/lib/auth/roles";
 
 interface ProjectHeaderProps {
   projectId: string;
+  role: AppRole | null;
 }
 
-export function ProjectHeader({ projectId }: ProjectHeaderProps) {
+export function ProjectHeader({ projectId, role }: ProjectHeaderProps) {
   const [project, setProject] = useState<Project | null>(null);
   const [client, setClient] = useState<Client | null>(null);
   const [loading, setLoading] = useState(true);
@@ -85,12 +87,14 @@ export function ProjectHeader({ projectId }: ProjectHeaderProps) {
             <Users2 className="h-4 w-4 mr-2" />
             {project.teamSize} miembros
           </Button>
-          <Link href={`/projects/${projectId}/schedule`}>
-            <Button variant="default" size="sm">
-              <HardHat className="h-4 w-4 mr-2" />
-              Gestión de Obra
-            </Button>
-          </Link>
+          {can(role, "planning.view") ? (
+            <Link href={`/projects/${projectId}/schedule`}>
+              <Button variant="default" size="sm">
+                <HardHat className="h-4 w-4 mr-2" />
+                Gestión de Obra
+              </Button>
+            </Link>
+          ) : null}
         </div>
       </div>
     </Card>

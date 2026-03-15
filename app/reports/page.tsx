@@ -9,6 +9,7 @@ import {
 import { RevenueChart } from "@/components/reports/revenue-chart";
 import { ProjectTimeline } from "@/components/reports/project-timeline";
 import { ResourceUtilization } from "@/components/reports/resource-utilization";
+import { ProjectControlMatrix } from "@/components/reports/project-control-matrix";
 
 export const metadata: Metadata = {
   title: "Informes | ArquiManagerPro",
@@ -26,6 +27,16 @@ export default function ReportsPage() {
       </div>
 
       <div className="grid gap-6">
+        <Card>
+          <CardHeader>
+            <CardTitle>Control Integral de Obras</CardTitle>
+            <CardDescription>Plazo, costo, caja y riesgos consolidados por proyecto</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <ProjectControlMatrix />
+          </CardContent>
+        </Card>
+
         <Card>
           <CardHeader>
             <CardTitle>Resumen de Ingresos</CardTitle>

@@ -38,16 +38,24 @@ export function CashflowTransactions() {
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [filters]);
 
   useEffect(() => {
     fetchTransactions();
 
-    const handleTransactionCreated = () => {
+    const handleUpdated = () => {
       fetchTransactions();
     };
-    window.addEventListener("transactionCreated", handleTransactionCreated);
-    return () => window.removeEventListener("transactionCreated", handleTransactionCreated);
+    window.addEventListener("transactionCreated", handleUpdated);
+    window.addEventListener("projectLaborUpdated", handleUpdated);
+    window.addEventListener("projectProcurementUpdated", handleUpdated);
+    window.addEventListener("projectRevenueUpdated", handleUpdated);
+    return () => {
+      window.removeEventListener("transactionCreated", handleUpdated);
+      window.removeEventListener("projectLaborUpdated", handleUpdated);
+      window.removeEventListener("projectProcurementUpdated", handleUpdated);
+      window.removeEventListener("projectRevenueUpdated", handleUpdated);
+    };
   }, [fetchTransactions]);
 
   if (isLoading) {
