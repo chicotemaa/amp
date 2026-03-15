@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import {
   Card,
   CardContent,
@@ -8,14 +9,47 @@ import {
 } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
-import { getProjectById } from "@/lib/api/projects";
+import { getProjectByIdDb } from "@/lib/api/projects";
+import type { Project } from "@/lib/types/project";
 
 interface ScheduleOverviewProps {
   projectId: string;
 }
 
 export function ScheduleOverview({ projectId }: ScheduleOverviewProps) {
-  const project = getProjectById(Number(projectId));
+  const [project, setProject] = useState<Project | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    let mounted = true;
+
+    getProjectByIdDb(Number(projectId))
+      .then((nextProject) => {
+        if (!mounted) return;
+        setProject(nextProject);
+      })
+      .finally(() => {
+        if (mounted) setIsLoading(false);
+      });
+
+    return () => {
+      mounted = false;
+    };
+  }, [projectId]);
+
+  if (isLoading) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>Cronograma de Obra</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="text-sm text-muted-foreground">Cargando cronograma...</p>
+        </CardContent>
+      </Card>
+    );
+  }
+
   if (!project) {
     return (
       <Card>
@@ -45,10 +79,10 @@ export function ScheduleOverview({ projectId }: ScheduleOverviewProps) {
     const endDate = new Date(start.getTime() + Math.round((totalDays * stage.offset[1]) / 100) * 24 * 60 * 60 * 1000);
 
     return {
-    ...stage,
-    startDate: startDate.toLocaleDateString("es-AR"),
-    endDate: endDate.toLocaleDateString("es-AR"),
-    status: stage.progress >= 100 ? "completed" : stage.progress > 0 ? "in-progress" : "pending",
+      ...stage,
+      startDate: startDate.toLocaleDateString("es-AR"),
+      endDate: endDate.toLocaleDateString("es-AR"),
+      status: stage.progress >= 100 ? "completed" : stage.progress > 0 ? "in-progress" : "pending",
     };
   });
 

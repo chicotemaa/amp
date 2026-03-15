@@ -25,6 +25,7 @@ export interface Database {
           client_id: number | null;
           on_track: boolean | null;
           description: string | null;
+          client_status_summary: string | null;
           created_at: string;
         };
         Insert: {
@@ -42,6 +43,7 @@ export interface Database {
           client_id?: number | null;
           on_track?: boolean | null;
           description?: string | null;
+          client_status_summary?: string | null;
           created_at?: string;
         };
         Update: {
@@ -59,6 +61,7 @@ export interface Database {
           client_id?: number | null;
           on_track?: boolean | null;
           description?: string | null;
+          client_status_summary?: string | null;
           created_at?: string;
         };
         Relationships: [];
@@ -109,6 +112,7 @@ export interface Database {
           description: string | null;
           is_photo: boolean;
           project_id: number;
+          is_client_visible: boolean;
           uploaded_at: string;
         };
         Insert: {
@@ -123,6 +127,7 @@ export interface Database {
           description?: string | null;
           is_photo: boolean;
           project_id: number;
+          is_client_visible?: boolean;
           uploaded_at?: string;
         };
         Update: {
@@ -137,6 +142,7 @@ export interface Database {
           description?: string | null;
           is_photo?: boolean;
           project_id?: number;
+          is_client_visible?: boolean;
           uploaded_at?: string;
         };
         Relationships: [];
@@ -315,6 +321,33 @@ export interface Database {
         };
         Relationships: [];
       };
+      project_members: {
+        Row: {
+          id: string;
+          project_id: number;
+          profile_id: string;
+          assignment_role: string;
+          is_primary: boolean;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          project_id: number;
+          profile_id: string;
+          assignment_role: string;
+          is_primary?: boolean;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          project_id?: number;
+          profile_id?: string;
+          assignment_role?: string;
+          is_primary?: boolean;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
       reports: {
         Row: {
           id: number;
@@ -323,6 +356,7 @@ export interface Database {
           report_date: string;
           status: string;
           author_id: number;
+          is_client_visible: boolean;
           created_at: string;
         };
         Insert: {
@@ -332,6 +366,7 @@ export interface Database {
           report_date: string;
           status: string;
           author_id: number;
+          is_client_visible?: boolean;
           created_at?: string;
         };
         Update: {
@@ -341,6 +376,7 @@ export interface Database {
           report_date?: string;
           status?: string;
           author_id?: number;
+          is_client_visible?: boolean;
           created_at?: string;
         };
         Relationships: [];
@@ -417,6 +453,54 @@ export interface Database {
         };
         Relationships: [];
       };
+      work_packages: {
+        Row: {
+          id: string;
+          project_id: number;
+          phase_id: string;
+          name: string;
+          budget_category: string;
+          unit: string;
+          planned_qty: number;
+          executed_qty: number;
+          weight: number;
+          planned_unit_cost: number;
+          planned_hours_per_unit: number;
+          status: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          project_id: number;
+          phase_id: string;
+          name: string;
+          budget_category?: string;
+          unit?: string;
+          planned_qty: number;
+          executed_qty?: number;
+          weight?: number;
+          planned_unit_cost?: number;
+          planned_hours_per_unit?: number;
+          status?: string;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          project_id?: number;
+          phase_id?: string;
+          name?: string;
+          budget_category?: string;
+          unit?: string;
+          planned_qty?: number;
+          executed_qty?: number;
+          weight?: number;
+          planned_unit_cost?: number;
+          planned_hours_per_unit?: number;
+          status?: string;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
       milestones: {
         Row: {
           id: string;
@@ -426,6 +510,11 @@ export interface Database {
           due_date: string;
           completed_at: string | null;
           status: string;
+          is_client_visible: boolean;
+          validated_at: string | null;
+          validated_by: number | null;
+          field_completed_at: string | null;
+          field_completed_by: number | null;
           created_at: string;
         };
         Insert: {
@@ -436,6 +525,11 @@ export interface Database {
           due_date: string;
           completed_at?: string | null;
           status?: string;
+          is_client_visible?: boolean;
+          validated_at?: string | null;
+          validated_by?: number | null;
+          field_completed_at?: string | null;
+          field_completed_by?: number | null;
           created_at?: string;
         };
         Update: {
@@ -446,6 +540,11 @@ export interface Database {
           due_date?: string;
           completed_at?: string | null;
           status?: string;
+          is_client_visible?: boolean;
+          validated_at?: string | null;
+          validated_by?: number | null;
+          field_completed_at?: string | null;
+          field_completed_by?: number | null;
           created_at?: string;
         };
         Relationships: [];
@@ -455,30 +554,48 @@ export interface Database {
           id: string;
           project_id: number;
           phase_id: string | null;
+          work_package_id: string | null;
           report_date: string;
           progress_delta: number;
+          executed_qty: number | null;
           note: string | null;
           reported_by: number | null;
+          is_client_visible: boolean;
+          validated_by: number | null;
+          validated_at: string | null;
+          validation_status: string;
           created_at: string;
         };
         Insert: {
           id?: string;
           project_id: number;
           phase_id?: string | null;
+          work_package_id?: string | null;
           report_date: string;
           progress_delta?: number;
+          executed_qty?: number | null;
           note?: string | null;
           reported_by?: number | null;
+          is_client_visible?: boolean;
+          validated_by?: number | null;
+          validated_at?: string | null;
+          validation_status?: string;
           created_at?: string;
         };
         Update: {
           id?: string;
           project_id?: number;
           phase_id?: string | null;
+          work_package_id?: string | null;
           report_date?: string;
           progress_delta?: number;
+          executed_qty?: number | null;
           note?: string | null;
           reported_by?: number | null;
+          is_client_visible?: boolean;
+          validated_by?: number | null;
+          validated_at?: string | null;
+          validation_status?: string;
           created_at?: string;
         };
         Relationships: [];
@@ -609,6 +726,165 @@ export interface Database {
         };
         Relationships: [];
       };
+      labor_entries: {
+        Row: {
+          id: string;
+          project_id: number;
+          phase_id: string | null;
+          work_package_id: string | null;
+          payment_batch_id: string | null;
+          employee_id: number;
+          work_date: string;
+          hours_worked: number;
+          hourly_rate: number;
+          amount_paid: number;
+          payment_status: string;
+          notes: string | null;
+          created_by: number | null;
+          approved_by: number | null;
+          approved_at: string | null;
+          paid_by: number | null;
+          paid_at: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          project_id: number;
+          phase_id?: string | null;
+          work_package_id?: string | null;
+          payment_batch_id?: string | null;
+          employee_id: number;
+          work_date: string;
+          hours_worked?: number;
+          hourly_rate?: number;
+          amount_paid?: number;
+          payment_status?: string;
+          notes?: string | null;
+          created_by?: number | null;
+          approved_by?: number | null;
+          approved_at?: string | null;
+          paid_by?: number | null;
+          paid_at?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          project_id?: number;
+          phase_id?: string | null;
+          work_package_id?: string | null;
+          payment_batch_id?: string | null;
+          employee_id?: number;
+          work_date?: string;
+          hours_worked?: number;
+          hourly_rate?: number;
+          amount_paid?: number;
+          payment_status?: string;
+          notes?: string | null;
+          created_by?: number | null;
+          approved_by?: number | null;
+          approved_at?: string | null;
+          paid_by?: number | null;
+          paid_at?: string | null;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
+      labor_payment_batches: {
+        Row: {
+          id: string;
+          project_id: number;
+          batch_number: string;
+          period_start: string;
+          period_end: string;
+          total_amount: number;
+          status: string;
+          notes: string | null;
+          created_by: number | null;
+          approved_by: number | null;
+          approved_at: string | null;
+          paid_by: number | null;
+          paid_at: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          project_id: number;
+          batch_number: string;
+          period_start: string;
+          period_end: string;
+          total_amount?: number;
+          status?: string;
+          notes?: string | null;
+          created_by?: number | null;
+          approved_by?: number | null;
+          approved_at?: string | null;
+          paid_by?: number | null;
+          paid_at?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          project_id?: number;
+          batch_number?: string;
+          period_start?: string;
+          period_end?: string;
+          total_amount?: number;
+          status?: string;
+          notes?: string | null;
+          created_by?: number | null;
+          approved_by?: number | null;
+          approved_at?: string | null;
+          paid_by?: number | null;
+          paid_at?: string | null;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
+      site_daily_logs: {
+        Row: {
+          id: string;
+          project_id: number;
+          phase_id: string | null;
+          log_date: string;
+          weather_condition: string;
+          weather_impact: string;
+          workforce_count: number;
+          hours_worked: number;
+          hours_lost: number;
+          notes: string | null;
+          created_by: number | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          project_id: number;
+          phase_id?: string | null;
+          log_date: string;
+          weather_condition?: string;
+          weather_impact?: string;
+          workforce_count?: number;
+          hours_worked?: number;
+          hours_lost?: number;
+          notes?: string | null;
+          created_by?: number | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          project_id?: number;
+          phase_id?: string | null;
+          log_date?: string;
+          weather_condition?: string;
+          weather_impact?: string;
+          workforce_count?: number;
+          hours_worked?: number;
+          hours_lost?: number;
+          notes?: string | null;
+          created_by?: number | null;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
       project_budget_control: {
         Row: {
           id: string;
@@ -656,6 +932,7 @@ export interface Database {
           operator_reviewed_at: string | null;
           client_comment: string | null;
           client_reviewed_at: string | null;
+          client_visible: boolean;
           created_at: string;
         };
         Insert: {
@@ -671,6 +948,7 @@ export interface Database {
           operator_reviewed_at?: string | null;
           client_comment?: string | null;
           client_reviewed_at?: string | null;
+          client_visible?: boolean;
           created_at?: string;
         };
         Update: {
@@ -686,6 +964,427 @@ export interface Database {
           operator_reviewed_at?: string | null;
           client_comment?: string | null;
           client_reviewed_at?: string | null;
+          client_visible?: boolean;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
+      impersonation_audit: {
+        Row: {
+          id: string;
+          operator_user_id: string;
+          viewed_role: Database["public"]["Enums"]["role_type"];
+          reason: string | null;
+          started_at: string;
+          ended_at: string | null;
+        };
+        Insert: {
+          id?: string;
+          operator_user_id: string;
+          viewed_role: Database["public"]["Enums"]["role_type"];
+          reason?: string | null;
+          started_at?: string;
+          ended_at?: string | null;
+        };
+        Update: {
+          id?: string;
+          operator_user_id?: string;
+          viewed_role?: Database["public"]["Enums"]["role_type"];
+          reason?: string | null;
+          started_at?: string;
+          ended_at?: string | null;
+        };
+        Relationships: [];
+      };
+      audit_logs: {
+        Row: {
+          id: string;
+          entity_type: string;
+          entity_id: string;
+          project_id: number | null;
+          action: string;
+          from_state: string | null;
+          to_state: string | null;
+          actor_profile_id: string;
+          actor_role: Database["public"]["Enums"]["role_type"];
+          metadata: Json;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          entity_type: string;
+          entity_id: string;
+          project_id?: number | null;
+          action: string;
+          from_state?: string | null;
+          to_state?: string | null;
+          actor_profile_id: string;
+          actor_role: Database["public"]["Enums"]["role_type"];
+          metadata?: Json;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          entity_type?: string;
+          entity_id?: string;
+          project_id?: number | null;
+          action?: string;
+          from_state?: string | null;
+          to_state?: string | null;
+          actor_profile_id?: string;
+          actor_role?: Database["public"]["Enums"]["role_type"];
+          metadata?: Json;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
+      suppliers: {
+        Row: {
+          id: number;
+          name: string;
+          contact_name: string | null;
+          email: string | null;
+          phone: string | null;
+          category: string;
+          is_active: boolean;
+          created_at: string;
+        };
+        Insert: {
+          id: number;
+          name: string;
+          contact_name?: string | null;
+          email?: string | null;
+          phone?: string | null;
+          category?: string;
+          is_active?: boolean;
+          created_at?: string;
+        };
+        Update: {
+          id?: number;
+          name?: string;
+          contact_name?: string | null;
+          email?: string | null;
+          phone?: string | null;
+          category?: string;
+          is_active?: boolean;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
+      purchase_orders: {
+        Row: {
+          id: string;
+          project_id: number;
+          material_id: string | null;
+          supplier_id: number;
+          phase_id: string | null;
+          work_package_id: string | null;
+          category: string;
+          description: string;
+          unit: string;
+          quantity: number;
+          unit_cost: number;
+          total_amount: number;
+          order_date: string;
+          expected_date: string | null;
+          due_date: string | null;
+          invoice_number: string | null;
+          received_date: string | null;
+          payment_date: string | null;
+          status: string;
+          notes: string | null;
+          created_by: number | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          project_id: number;
+          material_id?: string | null;
+          supplier_id: number;
+          phase_id?: string | null;
+          work_package_id?: string | null;
+          category: string;
+          description: string;
+          unit?: string;
+          quantity?: number;
+          unit_cost?: number;
+          total_amount?: number;
+          order_date?: string;
+          expected_date?: string | null;
+          due_date?: string | null;
+          invoice_number?: string | null;
+          received_date?: string | null;
+          payment_date?: string | null;
+          status?: string;
+          notes?: string | null;
+          created_by?: number | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          project_id?: number;
+          material_id?: string | null;
+          supplier_id?: number;
+          phase_id?: string | null;
+          work_package_id?: string | null;
+          category?: string;
+          description?: string;
+          unit?: string;
+          quantity?: number;
+          unit_cost?: number;
+          total_amount?: number;
+          order_date?: string;
+          expected_date?: string | null;
+          due_date?: string | null;
+          invoice_number?: string | null;
+          received_date?: string | null;
+          payment_date?: string | null;
+          status?: string;
+          notes?: string | null;
+          created_by?: number | null;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
+      purchase_order_payments: {
+        Row: {
+          id: string;
+          purchase_order_id: string;
+          project_id: number;
+          amount: number;
+          payment_date: string;
+          reference: string | null;
+          notes: string | null;
+          created_by: number | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          purchase_order_id: string;
+          project_id: number;
+          amount: number;
+          payment_date?: string;
+          reference?: string | null;
+          notes?: string | null;
+          created_by?: number | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          purchase_order_id?: string;
+          project_id?: number;
+          amount?: number;
+          payment_date?: string;
+          reference?: string | null;
+          notes?: string | null;
+          created_by?: number | null;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
+      project_certificates: {
+        Row: {
+          id: string;
+          project_id: number;
+          phase_id: string | null;
+          certificate_number: string;
+          description: string;
+          issue_date: string;
+          due_date: string | null;
+          amount: number;
+          status: string;
+          client_visible: boolean;
+          notes: string | null;
+          created_by: number | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          project_id: number;
+          phase_id?: string | null;
+          certificate_number: string;
+          description: string;
+          issue_date?: string;
+          due_date?: string | null;
+          amount: number;
+          status?: string;
+          client_visible?: boolean;
+          notes?: string | null;
+          created_by?: number | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          project_id?: number;
+          phase_id?: string | null;
+          certificate_number?: string;
+          description?: string;
+          issue_date?: string;
+          due_date?: string | null;
+          amount?: number;
+          status?: string;
+          client_visible?: boolean;
+          notes?: string | null;
+          created_by?: number | null;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
+      project_certificate_collections: {
+        Row: {
+          id: string;
+          certificate_id: string;
+          project_id: number;
+          amount: number;
+          collection_date: string;
+          reference: string | null;
+          notes: string | null;
+          created_by: number | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          certificate_id: string;
+          project_id: number;
+          amount: number;
+          collection_date?: string;
+          reference?: string | null;
+          notes?: string | null;
+          created_by?: number | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          certificate_id?: string;
+          project_id?: number;
+          amount?: number;
+          collection_date?: string;
+          reference?: string | null;
+          notes?: string | null;
+          created_by?: number | null;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
+      project_contracts: {
+        Row: {
+          id: string;
+          project_id: number;
+          contract_number: string;
+          title: string;
+          status: string;
+          signed_date: string | null;
+          start_date: string | null;
+          end_date: string | null;
+          original_amount: number;
+          client_visible: boolean;
+          notes: string | null;
+          created_by: number | null;
+          published_by: number | null;
+          published_at: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          project_id: number;
+          contract_number: string;
+          title: string;
+          status?: string;
+          signed_date?: string | null;
+          start_date?: string | null;
+          end_date?: string | null;
+          original_amount: number;
+          client_visible?: boolean;
+          notes?: string | null;
+          created_by?: number | null;
+          published_by?: number | null;
+          published_at?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          project_id?: number;
+          contract_number?: string;
+          title?: string;
+          status?: string;
+          signed_date?: string | null;
+          start_date?: string | null;
+          end_date?: string | null;
+          original_amount?: number;
+          client_visible?: boolean;
+          notes?: string | null;
+          created_by?: number | null;
+          published_by?: number | null;
+          published_at?: string | null;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
+      project_contract_amendments: {
+        Row: {
+          id: string;
+          contract_id: string;
+          project_id: number;
+          amendment_number: string;
+          title: string;
+          amendment_type: string;
+          status: string;
+          effective_date: string;
+          amount_delta: number;
+          days_delta: number;
+          client_visible: boolean;
+          description: string | null;
+          created_by: number | null;
+          submitted_by: number | null;
+          submitted_at: string | null;
+          approved_by: number | null;
+          approved_at: string | null;
+          published_by: number | null;
+          published_at: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          contract_id: string;
+          project_id: number;
+          amendment_number: string;
+          title: string;
+          amendment_type?: string;
+          status?: string;
+          effective_date?: string;
+          amount_delta?: number;
+          days_delta?: number;
+          client_visible?: boolean;
+          description?: string | null;
+          created_by?: number | null;
+          submitted_by?: number | null;
+          submitted_at?: string | null;
+          approved_by?: number | null;
+          approved_at?: string | null;
+          published_by?: number | null;
+          published_at?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          contract_id?: string;
+          project_id?: number;
+          amendment_number?: string;
+          title?: string;
+          amendment_type?: string;
+          status?: string;
+          effective_date?: string;
+          amount_delta?: number;
+          days_delta?: number;
+          client_visible?: boolean;
+          description?: string | null;
+          created_by?: number | null;
+          submitted_by?: number | null;
+          submitted_at?: string | null;
+          approved_by?: number | null;
+          approved_at?: string | null;
+          published_by?: number | null;
+          published_at?: string | null;
           created_at?: string;
         };
         Relationships: [];

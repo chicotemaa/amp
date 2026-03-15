@@ -1,7 +1,9 @@
 import { Metadata } from "next";
 import { redirect } from "next/navigation";
-import { getCurrentRoleServer, getSupabaseServerClient } from "@/lib/supabase/auth-server";
+import { getCurrentRoleServer, getEffectiveUiRoleServer } from "@/lib/supabase/auth-server";
 import { OperationsWorkspace } from "@/components/operations/operations-workspace";
+import { getRoleLabel, isClientRole } from "@/lib/auth/roles";
+import { getAccessibleProjectsServer } from "@/lib/auth/server-guards";
 
 export const metadata: Metadata = {
   title: "Operaciones | ArquiManagerPro",
@@ -17,8 +19,9 @@ type OperationsProjectRow = {
 
 export default async function OperationsPage() {
   const role = await getCurrentRoleServer();
+  const uiRole = await getEffectiveUiRoleServer();
 
-  if (role === "client") {
+  if (isClientRole(role)) {
     redirect("/client-portal");
   }
 
@@ -26,16 +29,9 @@ export default async function OperationsPage() {
     redirect("/login");
   }
 
-  const supabase = getSupabaseServerClient();
-  const { data, error } = await supabase
-    .from("projects")
-    .select("id, name, status, progress")
-    .order("id", { ascending: true });
-
-  const projects = (data ?? []) as OperationsProjectRow[];
-  const fetchError = error
-    ? "No se pudieron cargar los proyectos operativos. Revisa permisos o conexión con Supabase."
-    : null;
+  const { data, error } = await getAccessibleProjectsServer("id, name, status, progress");
+  const projects = data as OperationsProjectRow[];
+  const fetchError = error;
 
   return (
     <div className="flex flex-col gap-8">
@@ -45,9 +41,10 @@ export default async function OperationsPage() {
         </h1>
         <p className="text-muted-foreground">
           Registra avances diarios, incidentes y monitorea el estado operativo por proyecto.
+          {uiRole && uiRole !== role ? ` · Vista simulada: ${getRoleLabel(uiRole)}` : ""}
         </p>
       </div>
-      <OperationsWorkspace projects={projects} fetchError={fetchError} />
+      <OperationsWorkspace projects={projects} fetchError={fetchError} role={uiRole} />
     </div>
   );
 }

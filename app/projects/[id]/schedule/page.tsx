@@ -3,21 +3,23 @@ import { ScheduleOverview } from "@/components/projects/schedule/schedule-overvi
 import { LaborCosts } from "@/components/projects/schedule/labor-costs";
 import { MaterialsTracking } from "@/components/projects/schedule/materials-tracking";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { assertPermission, assertProjectAccess } from "@/lib/auth/server-guards";
+import { getCurrentRoleServer, getEffectiveUiRoleServer } from "@/lib/supabase/auth-server";
+import { getRoleLabel } from "@/lib/auth/roles";
+
+export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: "Gestión de Obra | ArquiManagerPro",
   description: "Gestión de cronograma, personal y materiales de obra",
 };
 
-export async function generateStaticParams() {
-  return [
-    { id: "1" },
-    { id: "2" },
-    { id: "3" }
-  ];
-}
+export default async function SchedulePage({ params }: { params: { id: string } }) {
+  const role = await getCurrentRoleServer();
+  const uiRole = await getEffectiveUiRoleServer();
+  await assertPermission("planning.view");
+  await assertProjectAccess(Number(params.id));
 
-export default function SchedulePage({ params }: { params: { id: string } }) {
   return (
     <div className="container mx-auto py-8">
       <div className="space-y-6">
@@ -26,6 +28,11 @@ export default function SchedulePage({ params }: { params: { id: string } }) {
           <p className="text-muted-foreground">
             Control de cronograma, personal y materiales
           </p>
+          {uiRole && uiRole !== role ? (
+            <p className="mt-2 text-sm text-muted-foreground">
+              Vista simulada: {getRoleLabel(uiRole)}
+            </p>
+          ) : null}
         </div>
 
         <Tabs defaultValue="overview" className="space-y-4">
