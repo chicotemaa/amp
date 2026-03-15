@@ -131,3 +131,36 @@ export async function createMaterialMovementDb(
 
   return mapMovement(movementData as MaterialMovementRow);
 }
+
+export type CreateMaterialInput = {
+  projectId: number;
+  name: string;
+  unit: string;
+  plannedQty?: number;
+  currentStock?: number;
+  reorderPoint?: number;
+  location?: string | null;
+};
+
+export async function createMaterialDb(input: CreateMaterialInput): Promise<MaterialItem> {
+  const { data, error } = await supabase
+    .from("materials")
+    .insert({
+      project_id: input.projectId,
+      name: input.name,
+      unit: input.unit,
+      planned_qty: input.plannedQty ?? 0,
+      current_stock: input.currentStock ?? 0,
+      reorder_point: input.reorderPoint ?? 0,
+      location: input.location ?? null,
+    })
+    .select("*")
+    .single();
+
+  if (error || !data) {
+    console.error("Error creating material:", error?.message);
+    throw new Error("No se pudo crear el material.");
+  }
+
+  return mapMaterial(data as MaterialRow);
+}

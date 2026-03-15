@@ -9,10 +9,17 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { DailyProgressForm } from "@/components/projects/project-detail/daily-progress-form";
 import { IncidentReporter } from "@/components/projects/project-detail/incident-reporter";
 import { ProgressReport } from "@/components/projects/project-detail/progress-report";
 import { MilestonesBoard } from "@/components/operations/milestones-board";
+import { ExecutionPlanner } from "@/components/operations/execution-planner";
+import { DailySiteLogForm } from "@/components/operations/daily-site-log-form";
+import { DailySiteLogsBoard } from "@/components/operations/daily-site-logs-board";
+import { OperationsCommandCenter } from "@/components/operations/operations-command-center";
+import { getVisibleOperationsTabs, type AppRole } from "@/lib/auth/roles";
+import { cn } from "@/lib/utils";
 
 type OperationsProject = {
   id: number;
@@ -24,14 +31,21 @@ type OperationsProject = {
 interface OperationsWorkspaceProps {
   projects: OperationsProject[];
   fetchError?: string | null;
+  role: AppRole | null;
 }
 
-export function OperationsWorkspace({ projects, fetchError = null }: OperationsWorkspaceProps) {
+export function OperationsWorkspace({
+  projects,
+  fetchError = null,
+  role,
+}: OperationsWorkspaceProps) {
   const defaultProjectId = useMemo(
     () => (projects.length > 0 ? String(projects[0].id) : ""),
     [projects]
   );
   const [selectedProjectId, setSelectedProjectId] = useState(defaultProjectId);
+  const visibleTabs = getVisibleOperationsTabs(role);
+  const defaultTab = visibleTabs[0] ?? "execution";
 
   const selectedProject = useMemo(
     () => projects.find((project) => String(project.id) === selectedProjectId) ?? null,
@@ -57,6 +71,7 @@ export function OperationsWorkspace({ projects, fetchError = null }: OperationsW
           </CardContent>
         </Card>
       ) : null}
+
       <Card>
         <CardHeader>
           <CardTitle>Proyecto Operativo</CardTitle>
@@ -88,14 +103,63 @@ export function OperationsWorkspace({ projects, fetchError = null }: OperationsW
       </Card>
 
       {selectedProjectId ? (
-        <div className="grid gap-6 lg:grid-cols-2">
-          <DailyProgressForm projectId={selectedProjectId} />
-          <IncidentReporter projectId={selectedProjectId} />
-          <MilestonesBoard projectId={selectedProjectId} />
-          <div className="lg:col-span-2">
-            <ProgressReport projectId={selectedProjectId} />
-          </div>
-        </div>
+        <>
+          <OperationsCommandCenter projectId={selectedProjectId} role={role} />
+
+          <Tabs defaultValue={defaultTab} className="w-full">
+            <TabsList
+              className={cn(
+                "grid w-full mb-4",
+                visibleTabs.length === 1 && "grid-cols-1",
+                visibleTabs.length === 2 && "grid-cols-2",
+                visibleTabs.length === 3 && "grid-cols-3",
+                visibleTabs.length >= 4 && "grid-cols-4"
+              )}
+            >
+              {visibleTabs.includes("execution") ? (
+                <TabsTrigger value="execution">Ejecución</TabsTrigger>
+              ) : null}
+              {visibleTabs.includes("incidents") ? (
+                <TabsTrigger value="incidents">Incidentes</TabsTrigger>
+              ) : null}
+              {visibleTabs.includes("control") ? (
+                <TabsTrigger value="control">Control</TabsTrigger>
+              ) : null}
+              {visibleTabs.includes("planning") ? (
+                <TabsTrigger value="planning">Planificación</TabsTrigger>
+              ) : null}
+            </TabsList>
+
+            {visibleTabs.includes("execution") ? (
+              <TabsContent value="execution" className="space-y-6">
+                <div className="grid gap-6 lg:grid-cols-2">
+                  <DailySiteLogForm projectId={selectedProjectId} />
+                  <DailyProgressForm projectId={selectedProjectId} />
+                  <MilestonesBoard projectId={selectedProjectId} role={role} />
+                  <DailySiteLogsBoard projectId={selectedProjectId} />
+                </div>
+              </TabsContent>
+            ) : null}
+
+            {visibleTabs.includes("incidents") ? (
+              <TabsContent value="incidents" className="space-y-6">
+                <IncidentReporter projectId={selectedProjectId} />
+              </TabsContent>
+            ) : null}
+
+            {visibleTabs.includes("control") ? (
+              <TabsContent value="control" className="space-y-6">
+                <ProgressReport projectId={selectedProjectId} role={role} />
+              </TabsContent>
+            ) : null}
+
+            {visibleTabs.includes("planning") ? (
+              <TabsContent value="planning" className="space-y-6">
+                <ExecutionPlanner projectId={selectedProjectId} />
+              </TabsContent>
+            ) : null}
+          </Tabs>
+        </>
       ) : null}
     </div>
   );
