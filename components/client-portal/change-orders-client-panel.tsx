@@ -44,12 +44,12 @@ export function ChangeOrdersClientPanel({ initialOrders }: ChangeOrdersClientPan
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Órdenes de Cambio Pendientes</CardTitle>
+        <CardTitle>Cambios Pendientes de Tu Aprobación</CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
         {pendingOrders.length === 0 ? (
           <p className="text-sm text-muted-foreground">
-            No tienes órdenes de cambio pendientes de aprobación.
+            No hay cambios publicados pendientes de tu respuesta.
           </p>
         ) : (
           pendingOrders.map((order) => (
@@ -95,4 +95,3 @@ export function ChangeOrdersClientPanel({ initialOrders }: ChangeOrdersClientPan
     </Card>
   );
 }
-
