@@ -8,7 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import type { AppRole } from "@/lib/auth/roles";
+import { can, type AppRole } from "@/lib/auth/roles";
 import {
   CHANGE_ORDER_STATUS_LABELS,
   type ChangeOrder,
@@ -34,8 +34,8 @@ export function ChangeOrdersBoard({ projectId, role }: ChangeOrdersBoardProps) {
   const [amountDelta, setAmountDelta] = useState(0);
   const [daysDelta, setDaysDelta] = useState(0);
 
-  const canCreate = role === "pm" || role === "operator";
-  const canReview = role === "operator";
+  const canCreate = can(role, "change_orders.create");
+  const canReview = can(role, "change_orders.review");
 
   const loadOrders = useCallback(async () => {
     setLoading(true);
@@ -175,7 +175,7 @@ export function ChangeOrdersBoard({ projectId, role }: ChangeOrdersBoardProps) {
                 </div>
 
                 <div className="flex gap-2">
-                  {role === "pm" && order.status === "draft" ? (
+                  {canCreate && role === "pm" && order.status === "draft" ? (
                     <Button size="sm" onClick={() => handleSubmitToOperator(order.id)}>
                       Enviar a Operador
                     </Button>
