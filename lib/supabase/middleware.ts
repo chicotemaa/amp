@@ -1,7 +1,7 @@
 import { createServerClient, type CookieOptions } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 import type { Database } from "@/lib/types/supabase";
-import type { AppRole } from "@/lib/auth/roles";
+import { canAccessRoute, getDefaultRouteForRole, type AppRole } from "@/lib/auth/roles";
 
 const PUBLIC_PATHS = ["/login"];
 
@@ -52,6 +52,7 @@ export async function updateSession(request: NextRequest) {
   }
 
   if (user && pathname === "/login") {
+    // Si el usuario ya está logueado y va al login, lo mandamos al index
     const url = request.nextUrl.clone();
     url.pathname = "/";
     return NextResponse.redirect(url);
@@ -65,18 +66,9 @@ export async function updateSession(request: NextRequest) {
       .single();
     const role = (profile?.role as AppRole | undefined) ?? null;
 
-    const isPath = (prefix: string) => pathname === prefix || pathname.startsWith(`${prefix}/`);
-    const roleDenied =
-      (role === "pm" && isPath("/cashflow")) ||
-      (role === "inspector" &&
-        (isPath("/cashflow") || isPath("/clients") || isPath("/employees") || isPath("/reports"))) ||
-      (role === "client" &&
-        !isPath("/client-portal") &&
-        pathname !== "/login");
-
-    if (roleDenied) {
+    if (!canAccessRoute(role, pathname)) {
       const url = request.nextUrl.clone();
-      url.pathname = role === "client" ? "/client-portal" : "/";
+      url.pathname = getDefaultRouteForRole(role);
       return NextResponse.redirect(url);
     }
   }
