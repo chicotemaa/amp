@@ -1,7 +1,7 @@
 import { cookies } from "next/headers";
 import { createServerClient } from "@supabase/ssr";
 import type { Database } from "@/lib/types/supabase";
-import type { AppRole } from "@/lib/auth/roles";
+import { getEffectiveUiRole, sanitizeViewAsRole, type AppRole } from "@/lib/auth/roles";
 
 export function getSupabaseServerClient() {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -51,3 +51,12 @@ export async function getCurrentRoleServer(): Promise<AppRole | null> {
   }
 }
 
+export async function getEffectiveUiRoleServer(): Promise<AppRole | null> {
+  const realRole = await getCurrentRoleServer();
+  if (!realRole) return null;
+
+  const cookieStore = cookies();
+  const requestedRole = cookieStore.get("amp_view_as_role")?.value ?? null;
+  const viewAsRole = sanitizeViewAsRole(realRole, requestedRole);
+  return getEffectiveUiRole(realRole, viewAsRole);
+}
