@@ -1,23 +1,50 @@
-import {
-  Card, CardContent, CardHeader, CardTitle,
-} from "@/components/ui/card";
+"use client";
+
+import { useEffect, useState } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Users, UserCheck, Clock, Briefcase } from "lucide-react";
-import { getEmployeeStats } from "@/lib/api/employees";
+import { getEmployeeStatsDb } from "@/lib/api/employees";
 
 export function EmployeeStats() {
-  const stats = getEmployeeStats();
+  const [stats, setStats] = useState({
+    total: 0,
+    active: 0,
+    inProject: 0,
+    hoursThisWeek: 0,
+    activeProjects: 0,
+  });
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    let mounted = true;
+
+    getEmployeeStatsDb()
+      .then((nextStats) => {
+        if (!mounted) return;
+        setStats(nextStats);
+      })
+      .finally(() => {
+        if (mounted) setIsLoading(false);
+      });
+
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
+  const inProjectRatio = stats.total > 0 ? Math.round((stats.inProject / stats.total) * 100) : 0;
 
   const cards = [
     {
       title: "Total Empleados",
       value: String(stats.total),
-      description: "+1 incorporación este mes",
+      description: "Equipo registrado",
       icon: Users,
     },
     {
       title: "Activos en Proyectos",
       value: String(stats.inProject),
-      description: `${Math.round((stats.inProject / stats.total) * 100)}% del equipo`,
+      description: `${inProjectRatio}% del equipo`,
       icon: UserCheck,
     },
     {
@@ -45,7 +72,7 @@ export function EmployeeStats() {
               <Icon className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{card.value}</div>
+              <div className="text-2xl font-bold">{isLoading ? "..." : card.value}</div>
               <p className="text-xs text-muted-foreground">{card.description}</p>
             </CardContent>
           </Card>

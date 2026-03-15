@@ -17,8 +17,8 @@ import { getSupabaseAuthBrowserClient } from "@/lib/supabase/auth-browser";
 
 export function LoginForm() {
   const [isLoading, setIsLoading] = useState(false);
-  const [email, setEmail] = useState("demo@arquimanager.pro");
-  const [password, setPassword] = useState("demo1234");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
   const supabase = getSupabaseAuthBrowserClient();
@@ -72,6 +72,7 @@ export function LoginForm() {
               id="email"
               type="email"
               placeholder="nombre@empresa.com"
+              autoComplete="email"
               value={email}
               onChange={(event) => setEmail(event.target.value)}
               disabled={isLoading}
@@ -83,6 +84,7 @@ export function LoginForm() {
             <Input
               id="password"
               type="password"
+              autoComplete="current-password"
               value={password}
               onChange={(event) => setPassword(event.target.value)}
               disabled={isLoading}

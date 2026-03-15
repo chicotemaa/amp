@@ -1,8 +1,10 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { getRecentReports } from "@/lib/api/reports";
+import { getReportsDb } from "@/lib/api/reports";
+import type { Report } from "@/lib/types/report";
 import { REPORT_STATUS_LABELS } from "@/lib/types/report";
 
 const statusStyles = {
@@ -12,7 +14,25 @@ const statusStyles = {
 };
 
 export function RecentReports() {
-  const reports = getRecentReports(3);
+  const [reports, setReports] = useState<Report[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    let mounted = true;
+
+    getReportsDb()
+      .then((reportsData) => {
+        if (!mounted) return;
+        setReports(reportsData.slice(0, 3));
+      })
+      .finally(() => {
+        if (mounted) setIsLoading(false);
+      });
+
+    return () => {
+      mounted = false;
+    };
+  }, []);
 
   return (
     <Card>
@@ -20,7 +40,10 @@ export function RecentReports() {
         <CardTitle>Reportes Recientes</CardTitle>
       </CardHeader>
       <CardContent>
-        <div className="space-y-4">
+        {isLoading ? (
+          <p className="text-sm text-muted-foreground">Cargando reportes...</p>
+        ) : (
+          <div className="space-y-4">
           {reports.map((report) => (
             <div key={report.id} className="flex items-center space-x-4">
               <div className="flex-1 space-y-0.5 min-w-0">
@@ -37,7 +60,8 @@ export function RecentReports() {
               </Badge>
             </div>
           ))}
-        </div>
+          </div>
+        )}
       </CardContent>
     </Card>
   );

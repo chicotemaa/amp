@@ -26,7 +26,7 @@ export function NewProjectDialog({ onProjectCreated }: { onProjectCreated?: () =
         teamSize: 0,
         budget: 0,
         image: "https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=800&auto=format&fit=crop&q=60", // Default image
-        clientId: 1, // Default client
+        clientId: 0,
         description: "",
     });
 

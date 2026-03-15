@@ -29,7 +29,7 @@ export async function getClientsDb(): Promise<Client[]> {
 
     if (clientsError || linksError) {
         console.error("Supabase clients error:", clientsError?.message ?? linksError?.message);
-        return CLIENTS;
+        return [];
     }
 
     const links = linksData as ClientProjectRow[];
@@ -49,6 +49,16 @@ export async function getClientByIdDb(id: number): Promise<Client | null> {
         return null;
     }
     return mapClientRow(data as ClientRow, []);
+}
+
+export async function getClientStatsDb() {
+    const clients = await getClientsDb();
+    const total = clients.length;
+    const active = clients.filter((client) => client.status === "Activo").length;
+    const potential = clients.filter((client) => client.status === "Potencial").length;
+    const totalProjects = clients.reduce((sum, client) => sum + client.projectIds.length, 0);
+
+    return { total, active, potential, totalProjects };
 }
 
 export function getClients(): Client[] {

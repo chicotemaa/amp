@@ -1,13 +1,44 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { getRecentClients } from "@/lib/api/clients";
-import { getProjectById } from "@/lib/api/projects";
+import { getClientsDb } from "@/lib/api/clients";
+import { getProjectsDb } from "@/lib/api/projects";
+import type { Client } from "@/lib/types/client";
+import type { Project } from "@/lib/types/project";
 
 export function RecentClients() {
-  const clients = getRecentClients(3);
+  const [clients, setClients] = useState<Client[]>([]);
+  const [projectsMap, setProjectsMap] = useState<Map<number, Project>>(new Map());
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    let mounted = true;
+
+    Promise.all([getClientsDb(), getProjectsDb()])
+      .then(([clientsData, projectsData]) => {
+        if (!mounted) return;
+
+        const recentClients = [...clientsData]
+          .sort(
+            (a, b) =>
+              new Date(b.lastInteraction).getTime() - new Date(a.lastInteraction).getTime()
+          )
+          .slice(0, 3);
+
+        setClients(recentClients);
+        setProjectsMap(new Map(projectsData.map((project) => [project.id, project])));
+      })
+      .finally(() => {
+        if (mounted) setIsLoading(false);
+      });
+
+    return () => {
+      mounted = false;
+    };
+  }, []);
 
   return (
     <Card>
@@ -15,10 +46,13 @@ export function RecentClients() {
         <CardTitle>Clientes Recientes</CardTitle>
       </CardHeader>
       <CardContent>
-        <div className="space-y-4">
+        {isLoading ? (
+          <p className="text-sm text-muted-foreground">Cargando clientes...</p>
+        ) : (
+          <div className="space-y-4">
           {clients.map((client) => {
             const lastProject = client.projectIds.length > 0
-              ? getProjectById(client.projectIds[client.projectIds.length - 1])
+              ? projectsMap.get(client.projectIds[client.projectIds.length - 1]) ?? null
               : null;
             const initials = client.name
               .split(" ")
@@ -46,7 +80,8 @@ export function RecentClients() {
               </div>
             );
           })}
-        </div>
+          </div>
+        )}
       </CardContent>
     </Card>
   );
