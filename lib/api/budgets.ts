@@ -1,34 +1,17 @@
 import { supabase } from "@/lib/supabase";
 import { BudgetVersion, BudgetItem, BudgetCategory } from "@/lib/types/budget";
+import { logCurrentUserAuditEvent } from "@/lib/api/audit";
+import type { Database } from "@/lib/types/supabase";
 
-interface ProjectBudgetRow {
-    id: string;
-    project_id: number;
-    version: number;
-    label: string;
-    description: string;
-    created_at: string;
-}
-
-interface ProjectBudgetItemRow {
-    id: string;
-    budget_id: string;
-    category: string;
-    description: string;
-    unit: string;
-    qty_planned: number;
-    price_unit_planned: number;
-    qty_actual: number;
-    price_unit_actual: number;
-    created_at: string;
-}
+type ProjectBudgetRow = Database["public"]["Tables"]["project_budgets"]["Row"];
+type ProjectBudgetItemRow = Database["public"]["Tables"]["project_budget_items"]["Row"];
 
 export async function getBudgetsByProject(projectId: number): Promise<BudgetVersion[]> {
     const { data: budgetsData, error: budgetsError } = await supabase
         .from("project_budgets")
         .select("*")
         .eq("project_id", projectId)
-        .order("version", { ascending: true }) as any;
+        .order("version", { ascending: true });
 
     if (budgetsError) {
         console.error("Error fetching budgets:", budgetsError.message);
@@ -44,7 +27,7 @@ export async function getBudgetsByProject(projectId: number): Promise<BudgetVers
     const { data: itemsData, error: itemsError } = await supabase
         .from("project_budget_items")
         .select("*")
-        .in("budget_id", versionIds) as any;
+        .in("budget_id", versionIds);
 
     if (itemsError) {
         console.error("Error fetching budget items:", itemsError.message);
@@ -80,9 +63,14 @@ export async function saveBudgetVersion(
     projectId: number,
     version: Omit<BudgetVersion, "createdAt">
 ): Promise<BudgetVersion | null> {
-    const { data: budgetData, error: budgetError } = await (supabase
+    const existingVersion = await supabase
         .from("project_budgets")
-        // @ts-ignore
+        .select("id, version")
+        .eq("id", version.id)
+        .maybeSingle();
+
+    const { data: budgetData, error: budgetError } = await supabase
+        .from("project_budgets")
         .upsert({
             id: version.id,
             project_id: projectId,
@@ -91,7 +79,7 @@ export async function saveBudgetVersion(
             description: version.description,
         })
         .select()
-        .single() as any);
+        .single();
 
     if (budgetError) {
         console.error("Error saving budget version:", budgetError.message);
@@ -115,13 +103,25 @@ export async function saveBudgetVersion(
             price_unit_actual: i.priceUnitActual,
         }));
 
-        // @ts-ignore
-        const { error: itemsError } = await (supabase.from("project_budget_items").insert(itemsToInsert) as any);
+        const { error: itemsError } = await supabase.from("project_budget_items").insert(itemsToInsert);
 
         if (itemsError) {
             console.error("Error saving budget items:", itemsError.message);
         }
     }
+
+    await logCurrentUserAuditEvent({
+        entityType: "budget_version",
+        entityId: version.id,
+        projectId,
+        action: existingVersion.data ? "update" : "create",
+        fromState: existingVersion.data ? `v${existingVersion.data.version}` : null,
+        toState: `v${version.version}`,
+        metadata: {
+            label: version.label,
+            itemCount: version.items.length,
+        },
+    });
 
     return {
         ...version,

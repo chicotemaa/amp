@@ -18,8 +18,8 @@ export function CashflowOverview() {
 
   useEffect(() => {
     let mounted = true;
-    getTransactionsDb()
-      .then((txns) => {
+    const load = async () => {
+      const txns = await getTransactionsDb();
         if (!mounted) return;
 
         // Apply filters
@@ -55,12 +55,27 @@ export function CashflowOverview() {
         result.sort((a, b) => monthOrder.indexOf(a.month.toLowerCase().replace('.', '')) - monthOrder.indexOf(b.month.toLowerCase().replace('.', '')));
 
         setData(result);
-      })
-      .finally(() => {
         if (mounted) setIsLoading(false);
-      });
+    };
+
+    void load();
+
+    const handleUpdated = () => {
+      setIsLoading(true);
+      void load();
+    };
+
+    window.addEventListener("transactionCreated", handleUpdated);
+    window.addEventListener("projectLaborUpdated", handleUpdated);
+    window.addEventListener("projectProcurementUpdated", handleUpdated);
+    window.addEventListener("projectRevenueUpdated", handleUpdated);
+
     return () => {
       mounted = false;
+      window.removeEventListener("transactionCreated", handleUpdated);
+      window.removeEventListener("projectLaborUpdated", handleUpdated);
+      window.removeEventListener("projectProcurementUpdated", handleUpdated);
+      window.removeEventListener("projectRevenueUpdated", handleUpdated);
     };
   }, [filters]);
 

@@ -1,6 +1,7 @@
 import { supabase } from "@/lib/supabase";
 import type { Database } from "@/lib/types/supabase";
 import { Incident, IncidentSummary } from "@/lib/types/incident";
+import { logCurrentUserAuditEvent } from "@/lib/api/audit";
 
 type IncidentRow = Database["public"]["Tables"]["incidents"]["Row"];
 
@@ -77,18 +78,50 @@ export async function createIncidentDb(input: CreateIncidentInput): Promise<Inci
     .select("*")
     .single();
 
+  const row = data as IncidentRow | null;
+
   if (error) {
     console.error("Error creating incident:", error.message);
     throw new Error("No se pudo crear el incidente.");
   }
 
-  return mapIncident(data as IncidentRow);
+  if (!row) {
+    throw new Error("No se pudo crear el incidente.");
+  }
+
+  await logCurrentUserAuditEvent({
+    entityType: "incident",
+    entityId: row.id,
+    projectId: input.projectId,
+    action: "create",
+    fromState: null,
+    toState: input.status,
+    metadata: {
+      severity: input.severity,
+      incidentType: input.incidentType,
+      impactDays: input.impactDays,
+      impactCost: input.impactCost,
+    },
+  });
+
+  return mapIncident(row);
 }
 
 export async function updateIncidentStatusDb(
   id: string,
   status: Incident["status"]
 ): Promise<Incident> {
+  const { data: currentData, error: currentError } = await supabase
+    .from("incidents")
+    .select("*")
+    .eq("id", id)
+    .single();
+
+  if (currentError || !currentData) {
+    console.error("Error loading incident:", currentError?.message);
+    throw new Error("No se encontró el incidente.");
+  }
+
   const updates: Database["public"]["Tables"]["incidents"]["Update"] = {
     status,
     resolved_at: status === "resolved" || status === "closed" ? new Date().toISOString().slice(0, 10) : null,
@@ -106,6 +139,19 @@ export async function updateIncidentStatusDb(
     throw new Error("No se pudo actualizar el estado del incidente.");
   }
 
+  const current = currentData as IncidentRow;
+  await logCurrentUserAuditEvent({
+    entityType: "incident",
+    entityId: id,
+    projectId: current.project_id,
+    action: "status_change",
+    fromState: current.status,
+    toState: status,
+    metadata: {
+      severity: current.severity,
+      ownerId: current.owner_id,
+    },
+  });
+
   return mapIncident(data as IncidentRow);
 }
-

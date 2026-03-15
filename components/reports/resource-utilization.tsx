@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { Doughnut } from "react-chartjs-2";
 import {
   Chart as ChartJS,
@@ -8,7 +9,8 @@ import {
   Legend,
   ChartData,
 } from "chart.js";
-import { getResourceUtilization } from "@/lib/api/employees";
+import { getEmployeesDb } from "@/lib/api/employees";
+import type { Employee, EmployeeDepartment } from "@/lib/types/employee";
 
 ChartJS.register(ArcElement, Tooltip, Legend);
 
@@ -28,7 +30,49 @@ const CHART_COLORS: Record<string, string> = {
 };
 
 export function ResourceUtilization() {
-  const resources = getResourceUtilization();
+  const [resources, setResources] = useState<
+    Array<{
+      department: EmployeeDepartment;
+      label: string;
+      count: number;
+      percentage: number;
+      hoursAssigned: number;
+    }>
+  >([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    let mounted = true;
+
+    getEmployeesDb()
+      .then((employees) => {
+        if (!mounted) return;
+
+        const departments: EmployeeDepartment[] = ["Diseño", "Ingeniería", "Construcción", "Gestión"];
+        const activeEmployees = employees.filter((employee) => employee.status !== "Inactivo");
+        const totalActive = activeEmployees.length;
+
+        const nextResources = departments.map((department) => {
+          const members = activeEmployees.filter((employee) => employee.department === department);
+          return {
+            department,
+            label: department,
+            count: members.length,
+            percentage: totalActive > 0 ? Math.round((members.length / totalActive) * 100) : 0,
+            hoursAssigned: members.reduce((sum, employee: Employee) => sum + employee.hoursThisWeek, 0),
+          };
+        });
+
+        setResources(nextResources);
+      })
+      .finally(() => {
+        if (mounted) setIsLoading(false);
+      });
+
+    return () => {
+      mounted = false;
+    };
+  }, []);
 
   const data: ChartData<"doughnut"> = {
     labels: resources.map((r) => r.label),
@@ -47,14 +91,18 @@ export function ResourceUtilization() {
   return (
     <div className="space-y-6">
       <div className="h-[300px] flex items-center justify-center">
-        <Doughnut
-          data={data}
-          options={{
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: { legend: { position: "bottom" } },
-          }}
-        />
+        {isLoading ? (
+          <div className="text-sm text-muted-foreground">Cargando recursos...</div>
+        ) : (
+          <Doughnut
+            data={data}
+            options={{
+              responsive: true,
+              maintainAspectRatio: false,
+              plugins: { legend: { position: "bottom" } },
+            }}
+          />
+        )}
       </div>
 
       <div className="grid grid-cols-2 gap-4 text-sm">

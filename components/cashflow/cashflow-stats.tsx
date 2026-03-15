@@ -63,11 +63,19 @@ export function CashflowStats() {
   useEffect(() => {
     fetchStats();
 
-    const handleTransactionCreated = () => {
+    const handleUpdated = () => {
       fetchStats();
     };
-    window.addEventListener("transactionCreated", handleTransactionCreated);
-    return () => window.removeEventListener("transactionCreated", handleTransactionCreated);
+    window.addEventListener("transactionCreated", handleUpdated);
+    window.addEventListener("projectLaborUpdated", handleUpdated);
+    window.addEventListener("projectProcurementUpdated", handleUpdated);
+    window.addEventListener("projectRevenueUpdated", handleUpdated);
+    return () => {
+      window.removeEventListener("transactionCreated", handleUpdated);
+      window.removeEventListener("projectLaborUpdated", handleUpdated);
+      window.removeEventListener("projectProcurementUpdated", handleUpdated);
+      window.removeEventListener("projectRevenueUpdated", handleUpdated);
+    };
   }, [fetchStats]);
 
   const { totalIncome, totalExpenses, margin, projectedNextMonth } = stats;

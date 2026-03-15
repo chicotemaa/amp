@@ -1,29 +1,54 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Building2, Users, FileText, Activity } from "lucide-react";
+import { Activity, Building2, CircleDollarSign, FileText, Users } from "lucide-react";
 import { getProjectsDb } from "@/lib/api/projects";
 import { getClientsDb } from "@/lib/api/clients";
 import { getReportsDb } from "@/lib/api/reports";
+import { getPortfolioControlSummariesDb } from "@/lib/api/project-control";
 import { Project } from "@/lib/types/project";
 import { Client } from "@/lib/types/client";
 import { Report } from "@/lib/types/report";
+import type { ProjectControlSummary } from "@/lib/types/project-control";
+import { can, type AppRole } from "@/lib/auth/roles";
 
-export function Overview() {
+interface OverviewProps {
+  role: AppRole | null;
+}
+
+export function Overview({ role }: OverviewProps) {
   const [projects, setProjects] = useState<Project[]>([]);
   const [clients, setClients] = useState<Client[]>([]);
   const [reports, setReports] = useState<Report[]>([]);
+  const [projectControlRows, setProjectControlRows] = useState<ProjectControlSummary[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  useEffect(() => {
+  const money = useMemo(
+    () =>
+      new Intl.NumberFormat("es-AR", {
+        style: "currency",
+        currency: "USD",
+        maximumFractionDigits: 0,
+      }),
+    []
+  );
+
+  const load = useCallback(() => {
     let mounted = true;
-    Promise.all([getProjectsDb(), getClientsDb(), getReportsDb()])
-      .then(([projectsData, clientsData, reportsData]) => {
+
+    void Promise.all([
+      getProjectsDb(),
+      getClientsDb(),
+      getReportsDb(),
+      getPortfolioControlSummariesDb(),
+    ])
+      .then(([projectsData, clientsData, reportsData, controlData]) => {
         if (!mounted) return;
         setProjects(projectsData);
         setClients(clientsData);
         setReports(reportsData);
+        setProjectControlRows(controlData);
       })
       .finally(() => {
         if (mounted) setIsLoading(false);
@@ -34,7 +59,42 @@ export function Overview() {
     };
   }, []);
 
-  const { totalProjects, inProgress, inPlanning, completed, progressRate, totalClients, totalReports, pendingReports } = useMemo(() => {
+  useEffect(() => {
+    const cleanup = load();
+    const handleUpdated = () => {
+      setIsLoading(true);
+      load();
+    };
+
+    window.addEventListener("projectLaborUpdated", handleUpdated);
+    window.addEventListener("projectProcurementUpdated", handleUpdated);
+    window.addEventListener("projectRevenueUpdated", handleUpdated);
+    window.addEventListener("projectContractsUpdated", handleUpdated);
+
+    return () => {
+      cleanup();
+      window.removeEventListener("projectLaborUpdated", handleUpdated);
+      window.removeEventListener("projectProcurementUpdated", handleUpdated);
+      window.removeEventListener("projectRevenueUpdated", handleUpdated);
+      window.removeEventListener("projectContractsUpdated", handleUpdated);
+    };
+  }, [load]);
+
+  const {
+    totalProjects,
+    inProgress,
+    inPlanning,
+    completed,
+    progressRate,
+    totalClients,
+    totalReports,
+    pendingReports,
+    pendingCollections,
+    overdueCollections,
+    projectsWithOverdueCollections,
+    projectedMargin,
+    projectsWithNegativeMargin,
+  } = useMemo(() => {
     const active = projects.filter((p) => p.status === "in-progress");
     const progress = active.length > 0
       ? Math.round(active.reduce((sum, p) => sum + p.progress, 0) / active.length)
@@ -49,8 +109,27 @@ export function Overview() {
       totalClients: clients.length,
       totalReports: reports.length,
       pendingReports: reports.filter((r) => r.status === "pending").length,
+      pendingCollections: projectControlRows.reduce(
+        (sum, row) => sum + row.pendingCollectionAmount,
+        0
+      ),
+      overdueCollections: projectControlRows.reduce(
+        (sum, row) => sum + row.overdueCollectionAmount,
+        0
+      ),
+      projectsWithOverdueCollections: projectControlRows.filter(
+        (row) => row.overdueCollectionAmount > 0
+      ).length,
+      projectedMargin: projectControlRows.reduce(
+        (sum, row) => sum + (row.projectedContractMargin ?? 0),
+        0
+      ),
+      projectsWithNegativeMargin: projectControlRows.filter(
+        (row) =>
+          row.projectedContractMargin !== null && row.projectedContractMargin < 0
+      ).length,
     };
-  }, [projects, clients, reports]);
+  }, [projects, clients, reports, projectControlRows]);
 
   const stats = [
     {
@@ -59,6 +138,7 @@ export function Overview() {
       description: `${inProgress} en ejecución · ${inPlanning} en planificación · ${completed} completado`,
       icon: Building2,
       color: "text-blue-500",
+      visible: true,
     },
     {
       title: "Clientes",
@@ -66,6 +146,7 @@ export function Overview() {
       description: `${clients.filter((c) => c.status === "Activo").length} activos este mes`,
       icon: Users,
       color: "text-green-500",
+      visible: can(role, "clients.view"),
     },
     {
       title: "Reportes",
@@ -73,6 +154,7 @@ export function Overview() {
       description: `${pendingReports} pendientes de revisión`,
       icon: FileText,
       color: "text-orange-500",
+      visible: can(role, "reports.view"),
     },
     {
       title: "Progreso Promedio",
@@ -80,8 +162,25 @@ export function Overview() {
       description: "Proyectos en ejecución",
       icon: Activity,
       color: "text-purple-500",
+      visible: can(role, "dashboard.view_operational"),
     },
-  ];
+    {
+      title: "Cobranzas",
+      value: money.format(pendingCollections),
+      description: `${money.format(overdueCollections)} vencido · ${projectsWithOverdueCollections} obras con alerta`,
+      icon: CircleDollarSign,
+      color: "text-emerald-500",
+      visible: can(role, "dashboard.view_financial"),
+    },
+    {
+      title: "Margen Proyectado",
+      value: money.format(projectedMargin),
+      description: `${projectsWithNegativeMargin} obras con margen negativo`,
+      icon: CircleDollarSign,
+      color: "text-cyan-500",
+      visible: can(role, "dashboard.view_financial"),
+    },
+  ].filter((stat) => stat.visible);
 
   return (
     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">

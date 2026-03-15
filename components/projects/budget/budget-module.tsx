@@ -16,6 +16,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { DollarSign } from "lucide-react";
 import { getBudgetsByProject, saveBudgetVersion } from "@/lib/api/budgets";
+import { toast } from "sonner";
 
 interface BudgetModuleProps {
     projectId: string;
@@ -52,6 +53,7 @@ export function BudgetModule({ projectId }: BudgetModuleProps) {
     const [newVersionDialog, setNewVersionDialog] = useState(false);
     const [newVersionDesc, setNewVersionDesc] = useState("");
     const [mounted, setMounted] = useState(false);
+    const [isBootstrapping, setIsBootstrapping] = useState(false);
 
     const loadData = useCallback(async () => {
         const data = await getBudgetsByProject(Number(projectId));
@@ -59,13 +61,8 @@ export function BudgetModule({ projectId }: BudgetModuleProps) {
             setVersions(data);
             setActiveVersionId(data[data.length - 1].id);
         } else {
-            // First time accessing this project's budget, inject the seed version via Supabase
-            const seed = generateSeedVersion();
-            const created = await saveBudgetVersion(Number(projectId), seed);
-            if (created) {
-                setVersions([created]);
-                setActiveVersionId(created.id);
-            }
+            setVersions([]);
+            setActiveVersionId("");
         }
         setMounted(true);
     }, [projectId]);
@@ -75,6 +72,24 @@ export function BudgetModule({ projectId }: BudgetModuleProps) {
     }, [loadData]);
 
     const activeVersion = versions.find((v) => v.id === activeVersionId) ?? versions[0];
+
+    const handleCreateInitialBudget = async () => {
+        setIsBootstrapping(true);
+        try {
+            const seed = generateSeedVersion();
+            const created = await saveBudgetVersion(Number(projectId), seed);
+            if (!created) {
+                throw new Error("No se pudo crear la versión inicial.");
+            }
+            setVersions([created]);
+            setActiveVersionId(created.id);
+            toast.success("Presupuesto inicial creado.");
+        } catch (error: any) {
+            toast.error(error?.message ?? "No se pudo crear el presupuesto inicial.");
+        } finally {
+            setIsBootstrapping(false);
+        }
+    };
 
     const updateItems = async (items: BudgetItem[]) => {
         if (!activeVersion) return;
@@ -120,8 +135,22 @@ export function BudgetModule({ projectId }: BudgetModuleProps) {
 
     if (!mounted || !activeVersion) {
         return (
-            <div className="mt-6 flex items-center justify-center py-20 text-muted-foreground text-sm">
-                Cargando presupuesto desde la base de datos...
+            <div className="mt-6">
+                {!mounted ? (
+                    <div className="flex items-center justify-center py-20 text-muted-foreground text-sm">
+                        Cargando presupuesto desde la base de datos...
+                    </div>
+                ) : (
+                    <div className="rounded-lg border border-dashed p-8 text-center space-y-3">
+                        <h3 className="text-lg font-semibold">Sin presupuesto cargado</h3>
+                        <p className="text-sm text-muted-foreground">
+                            Este proyecto todavía no tiene versiones de presupuesto.
+                        </p>
+                        <Button onClick={handleCreateInitialBudget} disabled={isBootstrapping}>
+                            {isBootstrapping ? "Creando..." : "Crear presupuesto inicial"}
+                        </Button>
+                    </div>
+                )}
             </div>
         );
     }
