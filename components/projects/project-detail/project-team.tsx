@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { getSafeAvatarSrc } from "@/lib/avatar";
 import { getEmployeesByProjectDb } from "@/lib/api/employees";
 import { getProjectByIdDb } from "@/lib/api/projects";
 import { Project } from "@/lib/types/project";
@@ -59,7 +60,7 @@ export function ProjectTeam({ projectId }: ProjectTeamProps) {
           {teamMembers.map((member) => (
             <div key={member.id} className="flex items-center space-x-4">
               <Avatar>
-                <AvatarImage src={member.avatar} />
+                <AvatarImage src={getSafeAvatarSrc(member.avatar)} />
                 <AvatarFallback>{member.name.split(' ').map(n => n[0]).join('')}</AvatarFallback>
               </Avatar>
               <div>

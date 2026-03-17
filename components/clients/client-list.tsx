@@ -18,6 +18,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { getSafeAvatarSrc } from "@/lib/avatar";
 import { getClientsDb } from "@/lib/api/clients";
 import { getProjectsDb } from "@/lib/api/projects";
 import { Client } from "@/lib/types/client";
@@ -105,9 +106,7 @@ export function ClientList({ filters }: ClientListProps) {
                 <TableCell>
                   <div className="flex items-center gap-3">
                     <Avatar className="h-9 w-9">
-                      {client.avatar && client.avatar.startsWith("http") ? (
-                        <AvatarImage src={client.avatar} />
-                      ) : null}
+                      <AvatarImage src={getSafeAvatarSrc(client.avatar)} />
                       <AvatarFallback>{initials}</AvatarFallback>
                     </Avatar>
                     <div>

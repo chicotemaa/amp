@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { getSafeAvatarSrc } from "@/lib/avatar";
 import { Bar, Line } from "react-chartjs-2";
 import {
   Chart as ChartJS,
@@ -72,7 +73,7 @@ export function EmployeeProfileDialog({ employee }: { employee: any }) {
         <div className="grid gap-6">
           <div className="flex items-center gap-4">
             <Avatar className="h-20 w-20">
-              <AvatarImage src={employee.avatar} />
+              <AvatarImage src={getSafeAvatarSrc(employee.avatar)} />
               <AvatarFallback>{employee.name.split(" ").map((n: any[]) => n[0]).join("")}</AvatarFallback>
             </Avatar>
             <div>

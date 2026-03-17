@@ -2,6 +2,7 @@ import { CLIENTS } from "@/lib/data/clients";
 import { Client } from "@/lib/types/client";
 import { supabase } from "@/lib/supabase";
 import type { Database } from "@/lib/types/supabase";
+import { getCachedQuery } from "@/lib/api/query-cache";
 
 type ClientRow = Database["public"]["Tables"]["clients"]["Row"];
 type ClientProjectRow = Database["public"]["Tables"]["client_projects"]["Row"];
@@ -22,33 +23,37 @@ function mapClientRow(row: ClientRow, projectIds: number[]): Client {
 }
 
 export async function getClientsDb(): Promise<Client[]> {
-    const [{ data: clientsData, error: clientsError }, { data: linksData, error: linksError }] = await Promise.all([
-        supabase.from("clients").select("*"),
-        supabase.from("client_projects").select("*"),
-    ]);
+    return getCachedQuery("clients:list", async () => {
+        const [{ data: clientsData, error: clientsError }, { data: linksData, error: linksError }] = await Promise.all([
+            supabase.from("clients").select("*"),
+            supabase.from("client_projects").select("*"),
+        ]);
 
-    if (clientsError || linksError) {
-        console.error("Supabase clients error:", clientsError?.message ?? linksError?.message);
-        return [];
-    }
+        if (clientsError || linksError) {
+            console.error("Supabase clients error:", clientsError?.message ?? linksError?.message);
+            return [];
+        }
 
-    const links = linksData as ClientProjectRow[];
-    const linksByClient = links.reduce<Record<number, number[]>>((acc, link) => {
-        if (!acc[link.client_id]) acc[link.client_id] = [];
-        acc[link.client_id].push(link.project_id);
-        return acc;
-    }, {});
+        const links = linksData as ClientProjectRow[];
+        const linksByClient = links.reduce<Record<number, number[]>>((acc, link) => {
+            if (!acc[link.client_id]) acc[link.client_id] = [];
+            acc[link.client_id].push(link.project_id);
+            return acc;
+        }, {});
 
-    return (clientsData as ClientRow[]).map((row) => mapClientRow(row, linksByClient[row.id] ?? []));
+        return (clientsData as ClientRow[]).map((row) => mapClientRow(row, linksByClient[row.id] ?? []));
+    });
 }
 
 export async function getClientByIdDb(id: number): Promise<Client | null> {
-    const { data, error } = await supabase.from("clients").select("*").eq("id", id).single();
-    if (error) {
-        console.error("Supabase client error:", error.message);
-        return null;
-    }
-    return mapClientRow(data as ClientRow, []);
+    return getCachedQuery(`clients:${id}`, async () => {
+        const { data, error } = await supabase.from("clients").select("*").eq("id", id).single();
+        if (error) {
+            console.error("Supabase client error:", error.message);
+            return null;
+        }
+        return mapClientRow(data as ClientRow, []);
+    });
 }
 
 export async function getClientStatsDb() {

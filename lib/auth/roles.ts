@@ -161,6 +161,7 @@ export const ROLE_CONFIG: Record<AppRole, RoleConfig> = {
     permissions: [
       "dashboard.view_operational",
       "projects.view",
+      "calendar.view",
       "planning.view",
       "operations.view",
       "operations.execute",

@@ -1,0 +1,8 @@
+{
+  "crons": [
+    {
+      "path": "/api/agenda-notifications/dispatch",
+      "schedule": "*/15 * * * *"
+    }
+  ]
+}

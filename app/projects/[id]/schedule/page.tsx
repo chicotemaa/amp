@@ -15,10 +15,13 @@ export const metadata: Metadata = {
 };
 
 export default async function SchedulePage({ params }: { params: { id: string } }) {
-  const role = await getCurrentRoleServer();
-  const uiRole = await getEffectiveUiRoleServer();
-  await assertPermission("planning.view");
-  await assertProjectAccess(Number(params.id));
+  const projectId = Number(params.id);
+  const [role, uiRole] = await Promise.all([
+    getCurrentRoleServer(),
+    getEffectiveUiRoleServer(),
+    assertPermission("planning.view"),
+    assertProjectAccess(projectId),
+  ]).then(([currentRole, effectiveUiRole]) => [currentRole, effectiveUiRole] as const);
 
   return (
     <div className="container mx-auto py-8">

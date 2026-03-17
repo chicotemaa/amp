@@ -1,6 +1,7 @@
 import { supabase } from "@/lib/supabase";
 import type { Database } from "@/lib/types/supabase";
 import type { ProjectControlSummary } from "@/lib/types/project-control";
+import { getCachedQuery } from "@/lib/api/query-cache";
 
 type ProjectRow = Database["public"]["Tables"]["projects"]["Row"];
 type ProjectBudgetControlRow = Database["public"]["Tables"]["project_budget_control"]["Row"];
@@ -636,205 +637,209 @@ function buildProjectControlSummary(
 export async function getProjectControlSummaryDb(
   projectId: number
 ): Promise<ProjectControlSummary | null> {
-  const [
-    { data: projectData, error: projectError },
-    { data: budgetData },
-    { data: transactionData },
-    { data: incidentData },
-    { data: changeOrderData },
-    { data: siteLogData },
-    { data: laborEntryData },
-    { data: workPackageData },
-    { data: purchaseOrderData },
-    { data: purchaseOrderPaymentData },
-    { data: projectCertificateData },
-    { data: projectCertificateCollectionData },
-    { data: projectContractData },
-    { data: projectContractAmendmentData },
-  ] = await Promise.all([
-    supabase.from("projects").select("*").eq("id", projectId).single(),
-    supabase.from("project_budget_control").select("*").eq("project_id", projectId).maybeSingle(),
-    supabase.from("transactions").select("*").eq("project_id", projectId),
-    supabase.from("incidents").select("*").eq("project_id", projectId),
-    supabase.from("change_orders").select("*").eq("project_id", projectId),
-    supabase.from("site_daily_logs").select("*").eq("project_id", projectId),
-    supabase.from("labor_entries").select("*").eq("project_id", projectId),
-    supabase.from("work_packages").select("*").eq("project_id", projectId),
-    supabase.from("purchase_orders").select("*").eq("project_id", projectId),
-    supabase.from("purchase_order_payments").select("*").eq("project_id", projectId),
-    supabase.from("project_certificates").select("*").eq("project_id", projectId),
-    supabase.from("project_certificate_collections").select("*").eq("project_id", projectId),
-    supabase.from("project_contracts").select("*").eq("project_id", projectId).maybeSingle(),
-    supabase.from("project_contract_amendments").select("*").eq("project_id", projectId),
-  ]);
+  return getCachedQuery(`project-control:${projectId}`, async () => {
+    const [
+      { data: projectData, error: projectError },
+      { data: budgetData },
+      { data: transactionData },
+      { data: incidentData },
+      { data: changeOrderData },
+      { data: siteLogData },
+      { data: laborEntryData },
+      { data: workPackageData },
+      { data: purchaseOrderData },
+      { data: purchaseOrderPaymentData },
+      { data: projectCertificateData },
+      { data: projectCertificateCollectionData },
+      { data: projectContractData },
+      { data: projectContractAmendmentData },
+    ] = await Promise.all([
+      supabase.from("projects").select("*").eq("id", projectId).single(),
+      supabase.from("project_budget_control").select("*").eq("project_id", projectId).maybeSingle(),
+      supabase.from("transactions").select("*").eq("project_id", projectId),
+      supabase.from("incidents").select("*").eq("project_id", projectId),
+      supabase.from("change_orders").select("*").eq("project_id", projectId),
+      supabase.from("site_daily_logs").select("*").eq("project_id", projectId),
+      supabase.from("labor_entries").select("*").eq("project_id", projectId),
+      supabase.from("work_packages").select("*").eq("project_id", projectId),
+      supabase.from("purchase_orders").select("*").eq("project_id", projectId),
+      supabase.from("purchase_order_payments").select("*").eq("project_id", projectId),
+      supabase.from("project_certificates").select("*").eq("project_id", projectId),
+      supabase.from("project_certificate_collections").select("*").eq("project_id", projectId),
+      supabase.from("project_contracts").select("*").eq("project_id", projectId).maybeSingle(),
+      supabase.from("project_contract_amendments").select("*").eq("project_id", projectId),
+    ]);
 
-  if (projectError || !projectData) {
-    console.error("Error loading project control summary:", projectError?.message);
-    return null;
-  }
+    if (projectError || !projectData) {
+      console.error("Error loading project control summary:", projectError?.message);
+      return null;
+    }
 
-  return buildProjectControlSummary(
-    projectData as ProjectRow,
-    (budgetData as ProjectBudgetControlRow | null) ?? null,
-    (transactionData ?? []) as TransactionRow[],
-    (incidentData ?? []) as IncidentRow[],
-    (changeOrderData ?? []) as ChangeOrderRow[],
-    (siteLogData ?? []) as SiteDailyLogRow[],
-    (laborEntryData ?? []) as LaborEntryRow[],
-    (workPackageData ?? []) as WorkPackageRow[],
-    (purchaseOrderData ?? []) as PurchaseOrderRow[],
-    (purchaseOrderPaymentData ?? []) as PurchaseOrderPaymentRow[],
-    (projectCertificateData ?? []) as ProjectCertificateRow[],
-    (projectCertificateCollectionData ?? []) as ProjectCertificateCollectionRow[],
-    (projectContractData as ProjectContractRow | null) ?? null,
-    (projectContractAmendmentData ?? []) as ProjectContractAmendmentRow[]
-  );
+    return buildProjectControlSummary(
+      projectData as ProjectRow,
+      (budgetData as ProjectBudgetControlRow | null) ?? null,
+      (transactionData ?? []) as TransactionRow[],
+      (incidentData ?? []) as IncidentRow[],
+      (changeOrderData ?? []) as ChangeOrderRow[],
+      (siteLogData ?? []) as SiteDailyLogRow[],
+      (laborEntryData ?? []) as LaborEntryRow[],
+      (workPackageData ?? []) as WorkPackageRow[],
+      (purchaseOrderData ?? []) as PurchaseOrderRow[],
+      (purchaseOrderPaymentData ?? []) as PurchaseOrderPaymentRow[],
+      (projectCertificateData ?? []) as ProjectCertificateRow[],
+      (projectCertificateCollectionData ?? []) as ProjectCertificateCollectionRow[],
+      (projectContractData as ProjectContractRow | null) ?? null,
+      (projectContractAmendmentData ?? []) as ProjectContractAmendmentRow[]
+    );
+  });
 }
 
 export async function getPortfolioControlSummariesDb(): Promise<ProjectControlSummary[]> {
-  const [
-    { data: projectsData, error: projectsError },
-    { data: budgetsData },
-    { data: transactionData },
-    { data: incidentData },
-    { data: changeOrderData },
-    { data: siteLogData },
-    { data: laborEntryData },
-    { data: workPackageData },
-    { data: purchaseOrderData },
-    { data: purchaseOrderPaymentData },
-    { data: projectCertificateData },
-    { data: projectCertificateCollectionData },
-    { data: projectContractData },
-    { data: projectContractAmendmentData },
-  ] = await Promise.all([
-    supabase.from("projects").select("*").order("id", { ascending: true }),
-    supabase.from("project_budget_control").select("*"),
-    supabase.from("transactions").select("*"),
-    supabase.from("incidents").select("*"),
-    supabase.from("change_orders").select("*"),
-    supabase.from("site_daily_logs").select("*"),
-    supabase.from("labor_entries").select("*"),
-    supabase.from("work_packages").select("*"),
-    supabase.from("purchase_orders").select("*"),
-    supabase.from("purchase_order_payments").select("*"),
-    supabase.from("project_certificates").select("*"),
-    supabase.from("project_certificate_collections").select("*"),
-    supabase.from("project_contracts").select("*"),
-    supabase.from("project_contract_amendments").select("*"),
-  ]);
+  return getCachedQuery("project-control:portfolio", async () => {
+    const [
+      { data: projectsData, error: projectsError },
+      { data: budgetsData },
+      { data: transactionData },
+      { data: incidentData },
+      { data: changeOrderData },
+      { data: siteLogData },
+      { data: laborEntryData },
+      { data: workPackageData },
+      { data: purchaseOrderData },
+      { data: purchaseOrderPaymentData },
+      { data: projectCertificateData },
+      { data: projectCertificateCollectionData },
+      { data: projectContractData },
+      { data: projectContractAmendmentData },
+    ] = await Promise.all([
+      supabase.from("projects").select("*").order("id", { ascending: true }),
+      supabase.from("project_budget_control").select("*"),
+      supabase.from("transactions").select("*"),
+      supabase.from("incidents").select("*"),
+      supabase.from("change_orders").select("*"),
+      supabase.from("site_daily_logs").select("*"),
+      supabase.from("labor_entries").select("*"),
+      supabase.from("work_packages").select("*"),
+      supabase.from("purchase_orders").select("*"),
+      supabase.from("purchase_order_payments").select("*"),
+      supabase.from("project_certificates").select("*"),
+      supabase.from("project_certificate_collections").select("*"),
+      supabase.from("project_contracts").select("*"),
+      supabase.from("project_contract_amendments").select("*"),
+    ]);
 
-  if (projectsError) {
-    console.error("Error loading portfolio control summaries:", projectsError.message);
-    return [];
-  }
+    if (projectsError) {
+      console.error("Error loading portfolio control summaries:", projectsError.message);
+      return [];
+    }
 
-  const budgetMap = new Map<number, ProjectBudgetControlRow>(
-    ((budgetsData ?? []) as ProjectBudgetControlRow[]).map((row) => [row.project_id, row])
-  );
+    const budgetMap = new Map<number, ProjectBudgetControlRow>(
+      ((budgetsData ?? []) as ProjectBudgetControlRow[]).map((row) => [row.project_id, row])
+    );
 
-  const transactionsByProject = new Map<number, TransactionRow[]>();
-  for (const row of (transactionData ?? []) as TransactionRow[]) {
-    if (typeof row.project_id !== "number") continue;
-    const current = transactionsByProject.get(row.project_id) ?? [];
-    current.push(row);
-    transactionsByProject.set(row.project_id, current);
-  }
+    const transactionsByProject = new Map<number, TransactionRow[]>();
+    for (const row of (transactionData ?? []) as TransactionRow[]) {
+      if (typeof row.project_id !== "number") continue;
+      const current = transactionsByProject.get(row.project_id) ?? [];
+      current.push(row);
+      transactionsByProject.set(row.project_id, current);
+    }
 
-  const incidentsByProject = new Map<number, IncidentRow[]>();
-  for (const row of (incidentData ?? []) as IncidentRow[]) {
-    const current = incidentsByProject.get(row.project_id) ?? [];
-    current.push(row);
-    incidentsByProject.set(row.project_id, current);
-  }
+    const incidentsByProject = new Map<number, IncidentRow[]>();
+    for (const row of (incidentData ?? []) as IncidentRow[]) {
+      const current = incidentsByProject.get(row.project_id) ?? [];
+      current.push(row);
+      incidentsByProject.set(row.project_id, current);
+    }
 
-  const changesByProject = new Map<number, ChangeOrderRow[]>();
-  for (const row of (changeOrderData ?? []) as ChangeOrderRow[]) {
-    const current = changesByProject.get(row.project_id) ?? [];
-    current.push(row);
-    changesByProject.set(row.project_id, current);
-  }
+    const changesByProject = new Map<number, ChangeOrderRow[]>();
+    for (const row of (changeOrderData ?? []) as ChangeOrderRow[]) {
+      const current = changesByProject.get(row.project_id) ?? [];
+      current.push(row);
+      changesByProject.set(row.project_id, current);
+    }
 
-  const siteLogsByProject = new Map<number, SiteDailyLogRow[]>();
-  for (const row of (siteLogData ?? []) as SiteDailyLogRow[]) {
-    const current = siteLogsByProject.get(row.project_id) ?? [];
-    current.push(row);
-    siteLogsByProject.set(row.project_id, current);
-  }
+    const siteLogsByProject = new Map<number, SiteDailyLogRow[]>();
+    for (const row of (siteLogData ?? []) as SiteDailyLogRow[]) {
+      const current = siteLogsByProject.get(row.project_id) ?? [];
+      current.push(row);
+      siteLogsByProject.set(row.project_id, current);
+    }
 
-  const laborEntriesByProject = new Map<number, LaborEntryRow[]>();
-  for (const row of (laborEntryData ?? []) as LaborEntryRow[]) {
-    const current = laborEntriesByProject.get(row.project_id) ?? [];
-    current.push(row);
-    laborEntriesByProject.set(row.project_id, current);
-  }
+    const laborEntriesByProject = new Map<number, LaborEntryRow[]>();
+    for (const row of (laborEntryData ?? []) as LaborEntryRow[]) {
+      const current = laborEntriesByProject.get(row.project_id) ?? [];
+      current.push(row);
+      laborEntriesByProject.set(row.project_id, current);
+    }
 
-  const purchaseOrdersByProject = new Map<number, PurchaseOrderRow[]>();
-  for (const row of (purchaseOrderData ?? []) as PurchaseOrderRow[]) {
-    const current = purchaseOrdersByProject.get(row.project_id) ?? [];
-    current.push(row);
-    purchaseOrdersByProject.set(row.project_id, current);
-  }
+    const purchaseOrdersByProject = new Map<number, PurchaseOrderRow[]>();
+    for (const row of (purchaseOrderData ?? []) as PurchaseOrderRow[]) {
+      const current = purchaseOrdersByProject.get(row.project_id) ?? [];
+      current.push(row);
+      purchaseOrdersByProject.set(row.project_id, current);
+    }
 
-  const workPackagesByProject = new Map<number, WorkPackageRow[]>();
-  for (const row of (workPackageData ?? []) as WorkPackageRow[]) {
-    const current = workPackagesByProject.get(row.project_id) ?? [];
-    current.push(row);
-    workPackagesByProject.set(row.project_id, current);
-  }
+    const workPackagesByProject = new Map<number, WorkPackageRow[]>();
+    for (const row of (workPackageData ?? []) as WorkPackageRow[]) {
+      const current = workPackagesByProject.get(row.project_id) ?? [];
+      current.push(row);
+      workPackagesByProject.set(row.project_id, current);
+    }
 
-  const purchaseOrderPaymentsByProject = new Map<number, PurchaseOrderPaymentRow[]>();
-  for (const row of (purchaseOrderPaymentData ?? []) as PurchaseOrderPaymentRow[]) {
-    const current = purchaseOrderPaymentsByProject.get(row.project_id) ?? [];
-    current.push(row);
-    purchaseOrderPaymentsByProject.set(row.project_id, current);
-  }
+    const purchaseOrderPaymentsByProject = new Map<number, PurchaseOrderPaymentRow[]>();
+    for (const row of (purchaseOrderPaymentData ?? []) as PurchaseOrderPaymentRow[]) {
+      const current = purchaseOrderPaymentsByProject.get(row.project_id) ?? [];
+      current.push(row);
+      purchaseOrderPaymentsByProject.set(row.project_id, current);
+    }
 
-  const projectCertificatesByProject = new Map<number, ProjectCertificateRow[]>();
-  for (const row of (projectCertificateData ?? []) as ProjectCertificateRow[]) {
-    const current = projectCertificatesByProject.get(row.project_id) ?? [];
-    current.push(row);
-    projectCertificatesByProject.set(row.project_id, current);
-  }
+    const projectCertificatesByProject = new Map<number, ProjectCertificateRow[]>();
+    for (const row of (projectCertificateData ?? []) as ProjectCertificateRow[]) {
+      const current = projectCertificatesByProject.get(row.project_id) ?? [];
+      current.push(row);
+      projectCertificatesByProject.set(row.project_id, current);
+    }
 
-  const projectCertificateCollectionsByProject = new Map<
-    number,
-    ProjectCertificateCollectionRow[]
-  >();
-  for (const row of (projectCertificateCollectionData ?? []) as ProjectCertificateCollectionRow[]) {
-    const current = projectCertificateCollectionsByProject.get(row.project_id) ?? [];
-    current.push(row);
-    projectCertificateCollectionsByProject.set(row.project_id, current);
-  }
+    const projectCertificateCollectionsByProject = new Map<
+      number,
+      ProjectCertificateCollectionRow[]
+    >();
+    for (const row of (projectCertificateCollectionData ?? []) as ProjectCertificateCollectionRow[]) {
+      const current = projectCertificateCollectionsByProject.get(row.project_id) ?? [];
+      current.push(row);
+      projectCertificateCollectionsByProject.set(row.project_id, current);
+    }
 
-  const projectContractsByProject = new Map<number, ProjectContractRow>();
-  for (const row of (projectContractData ?? []) as ProjectContractRow[]) {
-    projectContractsByProject.set(row.project_id, row);
-  }
+    const projectContractsByProject = new Map<number, ProjectContractRow>();
+    for (const row of (projectContractData ?? []) as ProjectContractRow[]) {
+      projectContractsByProject.set(row.project_id, row);
+    }
 
-  const projectContractAmendmentsByProject = new Map<number, ProjectContractAmendmentRow[]>();
-  for (const row of (projectContractAmendmentData ?? []) as ProjectContractAmendmentRow[]) {
-    const current = projectContractAmendmentsByProject.get(row.project_id) ?? [];
-    current.push(row);
-    projectContractAmendmentsByProject.set(row.project_id, current);
-  }
+    const projectContractAmendmentsByProject = new Map<number, ProjectContractAmendmentRow[]>();
+    for (const row of (projectContractAmendmentData ?? []) as ProjectContractAmendmentRow[]) {
+      const current = projectContractAmendmentsByProject.get(row.project_id) ?? [];
+      current.push(row);
+      projectContractAmendmentsByProject.set(row.project_id, current);
+    }
 
-  return ((projectsData ?? []) as ProjectRow[]).map((project) =>
-    buildProjectControlSummary(
-      project,
-      budgetMap.get(project.id) ?? null,
-      transactionsByProject.get(project.id) ?? [],
-      incidentsByProject.get(project.id) ?? [],
-      changesByProject.get(project.id) ?? [],
-      siteLogsByProject.get(project.id) ?? [],
-      laborEntriesByProject.get(project.id) ?? [],
-      workPackagesByProject.get(project.id) ?? [],
-      purchaseOrdersByProject.get(project.id) ?? [],
-      purchaseOrderPaymentsByProject.get(project.id) ?? [],
-      projectCertificatesByProject.get(project.id) ?? [],
-      projectCertificateCollectionsByProject.get(project.id) ?? [],
-      projectContractsByProject.get(project.id) ?? null,
-      projectContractAmendmentsByProject.get(project.id) ?? []
-    )
-  );
+    return ((projectsData ?? []) as ProjectRow[]).map((project) =>
+      buildProjectControlSummary(
+        project,
+        budgetMap.get(project.id) ?? null,
+        transactionsByProject.get(project.id) ?? [],
+        incidentsByProject.get(project.id) ?? [],
+        changesByProject.get(project.id) ?? [],
+        siteLogsByProject.get(project.id) ?? [],
+        laborEntriesByProject.get(project.id) ?? [],
+        workPackagesByProject.get(project.id) ?? [],
+        purchaseOrdersByProject.get(project.id) ?? [],
+        purchaseOrderPaymentsByProject.get(project.id) ?? [],
+        projectCertificatesByProject.get(project.id) ?? [],
+        projectCertificateCollectionsByProject.get(project.id) ?? [],
+        projectContractsByProject.get(project.id) ?? null,
+        projectContractAmendmentsByProject.get(project.id) ?? []
+      )
+    );
+  });
 }

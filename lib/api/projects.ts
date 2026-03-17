@@ -3,6 +3,7 @@ import { Project, ProjectStats } from "@/lib/types/project";
 import { supabase } from "@/lib/supabase";
 import type { Database } from "@/lib/types/supabase";
 import { logCurrentUserAuditEvent } from "@/lib/api/audit";
+import { getCachedQuery } from "@/lib/api/query-cache";
 
 type ProjectRow = Database["public"]["Tables"]["projects"]["Row"];
 
@@ -26,21 +27,25 @@ function mapProjectRow(row: ProjectRow): Project {
 }
 
 export async function getProjectsDb(): Promise<Project[]> {
-    const { data, error } = await supabase.from("projects").select("*");
-    if (error) {
-        console.error("Supabase projects error:", error.message);
-        return [];
-    }
-    return (data as ProjectRow[]).map(mapProjectRow);
+    return getCachedQuery("projects:list", async () => {
+        const { data, error } = await supabase.from("projects").select("*");
+        if (error) {
+            console.error("Supabase projects error:", error.message);
+            return [];
+        }
+        return (data as ProjectRow[]).map(mapProjectRow);
+    });
 }
 
 export async function getProjectByIdDb(id: number): Promise<Project | null> {
-    const { data, error } = await supabase.from("projects").select("*").eq("id", id).single();
-    if (error) {
-        console.error("Supabase project error:", error.message);
-        return null;
-    }
-    return mapProjectRow(data as ProjectRow);
+    return getCachedQuery(`projects:${id}`, async () => {
+        const { data, error } = await supabase.from("projects").select("*").eq("id", id).single();
+        if (error) {
+            console.error("Supabase project error:", error.message);
+            return null;
+        }
+        return mapProjectRow(data as ProjectRow);
+    });
 }
 
 /** Get all projects */

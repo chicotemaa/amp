@@ -22,9 +22,12 @@ export const metadata: Metadata = {
 };
 
 export default async function ProjectDetailPage({ params }: { params: { id: string } }) {
-  const role = await getCurrentRoleServer();
-  const uiRole = await getEffectiveUiRoleServer();
-  await assertProjectAccess(Number(params.id));
+  const projectId = Number(params.id);
+  const [role, uiRole] = await Promise.all([
+    getCurrentRoleServer(),
+    getEffectiveUiRoleServer(),
+    assertProjectAccess(projectId),
+  ]).then(([currentRole, effectiveUiRole]) => [currentRole, effectiveUiRole] as const);
   const visibleTabs = getVisibleProjectTabs(uiRole);
   const prioritizeFieldOps = isFieldRole(uiRole);
   const defaultTab = prioritizeFieldOps ? "progress" : visibleTabs[0] ?? "overview";

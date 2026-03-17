@@ -6,6 +6,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { getClientsDb } from "@/lib/api/clients";
 import { getProjectsDb } from "@/lib/api/projects";
+import { getSafeAvatarSrc } from "@/lib/avatar";
 import type { Client } from "@/lib/types/client";
 import type { Project } from "@/lib/types/project";
 
@@ -62,7 +63,7 @@ export function RecentClients() {
             return (
               <div key={client.email} className="flex items-center space-x-4">
                 <Avatar>
-                  <AvatarImage src={client.avatar} alt={client.name} />
+                  <AvatarImage src={getSafeAvatarSrc(client.avatar)} alt={client.name} />
                   <AvatarFallback>{initials}</AvatarFallback>
                 </Avatar>
                 <div className="flex-1 space-y-0.5 min-w-0">
