@@ -2,6 +2,7 @@ import { TRANSACTIONS, MONTHLY_CASHFLOW } from "@/lib/data/cashflow";
 import { Transaction, CashflowStats, MonthlyCashflow } from "@/lib/types/cashflow";
 import { supabase } from "@/lib/supabase";
 import type { Database } from "@/lib/types/supabase";
+import { getCachedQuery } from "@/lib/api/query-cache";
 
 type TransactionRow = Database["public"]["Tables"]["transactions"]["Row"];
 type LaborEntryRow = Database["public"]["Tables"]["labor_entries"]["Row"];
@@ -67,47 +68,48 @@ function buildMonthlyCashflow(rows: Transaction[]): MonthlyCashflow[] {
 }
 
 export async function getTransactionsDb(): Promise<Transaction[]> {
-    const [
-        { data: transactionsData, error: transactionsError },
-        { data: laborData, error: laborError },
-        { data: purchaseOrderData, error: purchaseOrderError },
-        { data: purchaseOrderPaymentData, error: purchaseOrderPaymentError },
-        { data: certificateData, error: certificateError },
-        { data: certificateCollectionData, error: certificateCollectionError },
-        { data: employeesData },
-        { data: projectsData },
-        { data: suppliersData },
-    ] = await Promise.all([
-        supabase.from("transactions").select("*").order("txn_date", { ascending: false }),
-        supabase.from("labor_entries").select("*").eq("payment_status", "paid").order("work_date", { ascending: false }),
-        supabase.from("purchase_orders").select("*"),
-        supabase.from("purchase_order_payments").select("*").order("payment_date", { ascending: false }),
-        supabase.from("project_certificates").select("*"),
-        supabase.from("project_certificate_collections").select("*").order("collection_date", { ascending: false }),
-        supabase.from("employees").select("id,name"),
-        supabase.from("projects").select("id,name"),
-        supabase.from("suppliers").select("id,name"),
-    ]);
+    return getCachedQuery("cashflow:transactions", async () => {
+        const [
+            { data: transactionsData, error: transactionsError },
+            { data: laborData, error: laborError },
+            { data: purchaseOrderData, error: purchaseOrderError },
+            { data: purchaseOrderPaymentData, error: purchaseOrderPaymentError },
+            { data: certificateData, error: certificateError },
+            { data: certificateCollectionData, error: certificateCollectionError },
+            { data: employeesData },
+            { data: projectsData },
+            { data: suppliersData },
+        ] = await Promise.all([
+            supabase.from("transactions").select("*").order("txn_date", { ascending: false }),
+            supabase.from("labor_entries").select("*").eq("payment_status", "paid").order("work_date", { ascending: false }),
+            supabase.from("purchase_orders").select("*"),
+            supabase.from("purchase_order_payments").select("*").order("payment_date", { ascending: false }),
+            supabase.from("project_certificates").select("*"),
+            supabase.from("project_certificate_collections").select("*").order("collection_date", { ascending: false }),
+            supabase.from("employees").select("id,name"),
+            supabase.from("projects").select("id,name"),
+            supabase.from("suppliers").select("id,name"),
+        ]);
 
-    if (
-        transactionsError ||
-        laborError ||
-        purchaseOrderError ||
-        purchaseOrderPaymentError ||
-        certificateError ||
-        certificateCollectionError
-    ) {
-        console.error(
-            "Supabase transactions error:",
-            transactionsError?.message ??
-                laborError?.message ??
-                purchaseOrderError?.message ??
-                purchaseOrderPaymentError?.message ??
-                certificateError?.message ??
-                certificateCollectionError?.message
-        );
-        return [];
-    }
+        if (
+            transactionsError ||
+            laborError ||
+            purchaseOrderError ||
+            purchaseOrderPaymentError ||
+            certificateError ||
+            certificateCollectionError
+        ) {
+            console.error(
+                "Supabase transactions error:",
+                transactionsError?.message ??
+                    laborError?.message ??
+                    purchaseOrderError?.message ??
+                    purchaseOrderPaymentError?.message ??
+                    certificateError?.message ??
+                    certificateCollectionError?.message
+            );
+            return [];
+        }
 
     const projectNameById = new Map<number, string>(
         ((projectsData ?? []) as Pick<ProjectRow, "id" | "name">[]).map((project) => [project.id, project.name])
@@ -291,14 +293,17 @@ export async function getTransactionsDb(): Promise<Transaction[]> {
     }];
     });
 
-    return [...baseTransactions, ...laborTransactions, ...purchaseTransactions, ...certificateTransactions].sort(
-        (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
-    );
+        return [...baseTransactions, ...laborTransactions, ...purchaseTransactions, ...certificateTransactions].sort(
+            (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
+        );
+    });
 }
 
 export async function getCashflowChartDataDb(): Promise<MonthlyCashflow[]> {
-    const transactions = await getTransactionsDb();
-    return buildMonthlyCashflow(transactions);
+    return getCachedQuery("cashflow:chart", async () => {
+        const transactions = await getTransactionsDb();
+        return buildMonthlyCashflow(transactions);
+    });
 }
 
 export function getTransactions(): Transaction[] {

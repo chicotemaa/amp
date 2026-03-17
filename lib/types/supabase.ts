@@ -1389,6 +1389,162 @@ export interface Database {
         };
         Relationships: [];
       };
+      project_agenda_events: {
+        Row: {
+          id: string;
+          project_id: number;
+          phase_id: string | null;
+          title: string;
+          description: string | null;
+          category: string;
+          starts_at: string;
+          ends_at: string | null;
+          is_all_day: boolean;
+          status: string;
+          priority: string;
+          assigned_to: number | null;
+          reminder_at: string | null;
+          created_by: number | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          project_id: number;
+          phase_id?: string | null;
+          title: string;
+          description?: string | null;
+          category?: string;
+          starts_at: string;
+          ends_at?: string | null;
+          is_all_day?: boolean;
+          status?: string;
+          priority?: string;
+          assigned_to?: number | null;
+          reminder_at?: string | null;
+          created_by?: number | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          project_id?: number;
+          phase_id?: string | null;
+          title?: string;
+          description?: string | null;
+          category?: string;
+          starts_at?: string;
+          ends_at?: string | null;
+          is_all_day?: boolean;
+          status?: string;
+          priority?: string;
+          assigned_to?: number | null;
+          reminder_at?: string | null;
+          created_by?: number | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+      user_notification_reads: {
+        Row: {
+          id: string;
+          user_id: string;
+          notification_key: string;
+          read_at: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          notification_key: string;
+          read_at?: string;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          notification_key?: string;
+          read_at?: string;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
+      user_notification_preferences: {
+        Row: {
+          id: string;
+          user_id: string;
+          email_enabled: boolean;
+          email_for_reminder_due: boolean;
+          email_for_reminder_upcoming: boolean;
+          email_for_due_today: boolean;
+          email_for_overdue: boolean;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          email_enabled?: boolean;
+          email_for_reminder_due?: boolean;
+          email_for_reminder_upcoming?: boolean;
+          email_for_due_today?: boolean;
+          email_for_overdue?: boolean;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          email_enabled?: boolean;
+          email_for_reminder_due?: boolean;
+          email_for_reminder_upcoming?: boolean;
+          email_for_due_today?: boolean;
+          email_for_overdue?: boolean;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+      agenda_notification_deliveries: {
+        Row: {
+          id: string;
+          user_id: string;
+          notification_key: string;
+          channel: string;
+          recipient: string;
+          subject: string;
+          status: string;
+          sent_at: string | null;
+          error_message: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          notification_key: string;
+          channel: string;
+          recipient: string;
+          subject: string;
+          status?: string;
+          sent_at?: string | null;
+          error_message?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          notification_key?: string;
+          channel?: string;
+          recipient?: string;
+          subject?: string;
+          status?: string;
+          sent_at?: string | null;
+          error_message?: string | null;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
       monthly_cashflow: {
         Row: {
           month_key: string;

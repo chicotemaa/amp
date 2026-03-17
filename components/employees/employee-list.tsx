@@ -10,6 +10,7 @@ import { MoreVertical, Mail, Phone, Building2 } from "lucide-react";
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { getSafeAvatarSrc } from "@/lib/avatar";
 import { getEmployeesDb } from "@/lib/api/employees";
 import { Employee } from "@/lib/types/employee";
 import { useEffect, useState, useCallback } from "react";
@@ -75,9 +76,7 @@ export function EmployeeList() {
                 <TableCell>
                   <div className="flex items-center gap-3">
                     <Avatar className="h-9 w-9">
-                      {employee.avatar && employee.avatar.startsWith("http") ? (
-                        <AvatarImage src={employee.avatar} />
-                      ) : null}
+                      <AvatarImage src={getSafeAvatarSrc(employee.avatar)} />
                       <AvatarFallback>{initials}</AvatarFallback>
                     </Avatar>
                     <div>

@@ -2,6 +2,7 @@ import { Inter } from 'next/font/google';
 import { ThemeProvider } from '@/components/theme-provider';
 import { FilterProvider } from '@/contexts/filter-context';
 import Header from '@/components/header';
+import { Toaster } from '@/components/ui/sonner';
 import './globals.css';
 
 const inter = Inter({ subsets: ['latin'] });
@@ -31,6 +32,7 @@ export default function RootLayout({
               <main className="flex-1 container py-6">{children}</main>
             </div>
           </FilterProvider>
+          <Toaster />
         </ThemeProvider>
       </body>
     </html>

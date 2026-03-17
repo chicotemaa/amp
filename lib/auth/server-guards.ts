@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import { cache } from "react";
 import { can, getDefaultRouteForRole, type AppRole, type Permission } from "@/lib/auth/roles";
 import { getCurrentRoleServer, getSupabaseServerClient } from "@/lib/supabase/auth-server";
 
@@ -17,7 +18,7 @@ type ProjectAccessContext = {
   clientId: number | null;
 };
 
-export async function getCurrentProfileServer(): Promise<CurrentProfile | null> {
+export const getCurrentProfileServer = cache(async (): Promise<CurrentProfile | null> => {
   try {
     const supabase = getSupabaseServerClient();
     const {
@@ -38,7 +39,7 @@ export async function getCurrentProfileServer(): Promise<CurrentProfile | null> 
   } catch {
     return null;
   }
-}
+});
 
 async function getProjectAccessContext(): Promise<ProjectAccessContext | null> {
   const profile = await getCurrentProfileServer();

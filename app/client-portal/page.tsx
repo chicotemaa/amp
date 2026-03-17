@@ -164,42 +164,68 @@ export default async function ClientPortalPage() {
           .filter((id): id is number => typeof id === "number");
 
         if (projectIds.length > 0) {
-          const { data: changeOrders } = await supabase
-            .from("change_orders")
-            .select("*")
-            .in("project_id", projectIds)
-            .eq("client_visible", true)
-            .eq("status", "pending_client")
-            .order("created_at", { ascending: false });
+          const [
+            { data: changeOrders },
+            { data: milestones },
+            { data: reports },
+            { data: certificates },
+            { data: collections },
+            { data: contracts },
+            { data: contractAmendments },
+          ] = await Promise.all([
+            supabase
+              .from("change_orders")
+              .select("*")
+              .in("project_id", projectIds)
+              .eq("client_visible", true)
+              .eq("status", "pending_client")
+              .order("created_at", { ascending: false }),
+            (supabase as any)
+              .from("milestones")
+              .select("id, project_id, name, due_date, completed_at, status")
+              .in("project_id", projectIds)
+              .eq("is_client_visible", true)
+              .order("due_date", { ascending: true }),
+            supabase
+              .from("reports")
+              .select("id, project_id, title, report_date, status")
+              .in("project_id", projectIds)
+              .eq("is_client_visible", true)
+              .order("report_date", { ascending: false }),
+            supabase
+              .from("project_certificates")
+              .select(
+                "id, project_id, certificate_number, description, issue_date, due_date, amount, status"
+              )
+              .in("project_id", projectIds)
+              .eq("client_visible", true)
+              .order("issue_date", { ascending: false }),
+            supabase
+              .from("project_certificate_collections")
+              .select("id, certificate_id, project_id, amount, collection_date, reference")
+              .in("project_id", projectIds)
+              .order("collection_date", { ascending: false }),
+            supabase
+              .from("project_contracts")
+              .select(
+                "id, project_id, contract_number, title, status, start_date, end_date, original_amount, published_at"
+              )
+              .in("project_id", projectIds)
+              .eq("client_visible", true),
+            supabase
+              .from("project_contract_amendments")
+              .select(
+                "id, project_id, amendment_number, title, effective_date, amount_delta, days_delta, published_at"
+              )
+              .in("project_id", projectIds)
+              .eq("client_visible", true)
+              .eq("status", "approved")
+              .order("effective_date", { ascending: false }),
+          ]);
 
           pendingChangeOrders = ((changeOrders ?? []) as ChangeOrderRow[]).map(mapChangeOrder);
-
-          const { data: milestones } = await (supabase as any)
-            .from("milestones")
-            .select("id, project_id, name, due_date, completed_at, status")
-            .in("project_id", projectIds)
-            .eq("is_client_visible", true)
-            .order("due_date", { ascending: true });
-
           visibleMilestones = (milestones ?? []) as MilestonePortalRow[];
-
-          const { data: reports } = await supabase
-            .from("reports")
-            .select("id, project_id, title, report_date, status")
-            .in("project_id", projectIds)
-            .eq("is_client_visible", true)
-            .order("report_date", { ascending: false });
-
           visibleReports = (reports ?? []) as ReportPortalRow[];
-
-          const { data: certificates } = await supabase
-            .from("project_certificates")
-            .select(
-              "id, project_id, certificate_number, description, issue_date, due_date, amount, status"
-            )
-            .in("project_id", projectIds)
-            .eq("client_visible", true)
-            .order("issue_date", { ascending: false });
 
           visibleCertificates = ((certificates ?? []) as Array<
             Omit<CertificatePortalRow, "amount"> & { amount: number | string }
@@ -208,12 +234,6 @@ export default async function ClientPortalPage() {
             amount: Number(certificate.amount ?? 0),
           }));
 
-          const { data: collections } = await supabase
-            .from("project_certificate_collections")
-            .select("id, certificate_id, project_id, amount, collection_date, reference")
-            .in("project_id", projectIds)
-            .order("collection_date", { ascending: false });
-
           visibleCollections = ((collections ?? []) as Array<
             Omit<CertificateCollectionPortalRow, "amount"> & { amount: number | string }
           >).map((collection) => ({
@@ -221,30 +241,12 @@ export default async function ClientPortalPage() {
             amount: Number(collection.amount ?? 0),
           }));
 
-          const { data: contracts } = await supabase
-            .from("project_contracts")
-            .select(
-              "id, project_id, contract_number, title, status, start_date, end_date, original_amount, published_at"
-            )
-            .in("project_id", projectIds)
-            .eq("client_visible", true);
-
           visibleContracts = ((contracts ?? []) as Array<
             Omit<ContractPortalRow, "original_amount"> & { original_amount: number | string }
           >).map((contract) => ({
             ...contract,
             original_amount: Number(contract.original_amount ?? 0),
           }));
-
-          const { data: contractAmendments } = await supabase
-            .from("project_contract_amendments")
-            .select(
-              "id, project_id, amendment_number, title, effective_date, amount_delta, days_delta, published_at"
-            )
-            .in("project_id", projectIds)
-            .eq("client_visible", true)
-            .eq("status", "approved")
-            .order("effective_date", { ascending: false });
 
           visibleContractAmendments = ((contractAmendments ?? []) as Array<
             Omit<ContractAmendmentPortalRow, "amount_delta"> & { amount_delta: number | string }

@@ -2,6 +2,7 @@
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Progress } from "@/components/ui/progress";
+import { getSafeAvatarSrc } from "@/lib/avatar";
 
 const projects = [
   {
@@ -42,7 +43,7 @@ export function RecentProjects() {
       {projects.map((project) => (
         <div key={project.name} className="flex items-center">
           <Avatar className="h-9 w-9">
-            <AvatarImage src={project.manager.avatar} alt="Avatar" />
+            <AvatarImage src={getSafeAvatarSrc(project.manager.avatar)} alt="Avatar" />
             <AvatarFallback>{project.manager.initials}</AvatarFallback>
           </Avatar>
           <div className="ml-4 space-y-1">

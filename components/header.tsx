@@ -59,12 +59,15 @@ import {
   isNavigationItemActive,
   type NavigationItem,
 } from "@/lib/navigation/menu";
+import { AgendaNotificationsMenu } from "@/components/header/agenda-notifications-menu";
+import { getSafeAvatarSrc } from "@/lib/avatar";
 
 export default function Header() {
   const pathname = usePathname();
   const router = useRouter();
   const [user, setUser] = useState<User | null>(null);
   const [role, setRole] = useState<AppRole | null>(null);
+  const [employeeId, setEmployeeId] = useState<number | null>(null);
   const [viewAsRole, setViewAsRole] = useState<AppRole | null>(null);
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const supabase = useMemo(() => getSupabaseAuthBrowserClient(), []);
@@ -77,11 +80,12 @@ export default function Header() {
       if (currentUser) {
         const { data: profile } = await supabase
           .from("profiles")
-          .select("role")
+          .select("role, employee_id")
           .eq("id", currentUser.id)
           .single();
         const realRole = (profile?.role as AppRole | undefined) ?? null;
         setRole(realRole);
+        setEmployeeId(profile?.employee_id ?? null);
 
         const cookieValue = document.cookie
           .split("; ")
@@ -90,6 +94,7 @@ export default function Header() {
         setViewAsRole(sanitizeViewAsRole(realRole, cookieValue));
       } else {
         setRole(null);
+        setEmployeeId(null);
         setViewAsRole(null);
       }
     };
@@ -354,11 +359,16 @@ export default function Header() {
             </div>
           ) : null}
 
+          <AgendaNotificationsMenu
+            userId={user?.id ?? null}
+            role={effectiveUiRole}
+            employeeId={employeeId}
+          />
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" className="relative h-8 w-8 rounded-full">
                 <Avatar className="h-8 w-8">
-                  <AvatarImage src="/avatars/01.png" alt="Usuario" />
+                  <AvatarImage src={getSafeAvatarSrc("/avatars/01.png")} alt="Usuario" />
                   <AvatarFallback>
                     {(user?.email ?? "AMP").slice(0, 2).toUpperCase()}
                   </AvatarFallback>
