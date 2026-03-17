@@ -13,6 +13,7 @@ import type { Database } from "@/lib/types/supabase";
 import type { OperationsAgendaEvent } from "@/lib/types/operations-agenda";
 
 export const dynamic = "force-dynamic";
+export const runtime = "nodejs";
 
 type ProfileRow = Pick<
   Database["public"]["Tables"]["profiles"]["Row"],
