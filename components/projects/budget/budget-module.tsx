@@ -8,6 +8,7 @@ import { BudgetItemsTable } from "./budget-items-table";
 import { BudgetVersionHistory } from "./budget-version-history";
 import { BudgetPdfExport } from "./budget-pdf-export";
 import { BudgetCoordinationPanel } from "./budget-coordination-panel";
+import { BudgetComputoModule } from "./budget-computo-module";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
@@ -170,11 +171,19 @@ export function BudgetModule({ projectId }: BudgetModuleProps) {
                 <BudgetPdfExport version={activeVersion} projectId={projectId} />
             </div>
 
-            <Tabs defaultValue="technical" className="space-y-4">
+            <Tabs defaultValue="computo" className="space-y-4">
                 <TabsList>
+                    <TabsTrigger value="computo">Cómputo y Presupuesto</TabsTrigger>
                     <TabsTrigger value="technical">Presupuesto Técnico</TabsTrigger>
                     <TabsTrigger value="coordination">Coordinación Económica</TabsTrigger>
                 </TabsList>
+
+                <TabsContent value="computo">
+                    <BudgetComputoModule
+                        budgetId={activeVersion.id}
+                        projectId={projectId}
+                    />
+                </TabsContent>
 
                 <TabsContent value="technical" className="space-y-6">
                     {/* KPI Stats */}

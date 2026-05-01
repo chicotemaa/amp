@@ -1563,6 +1563,246 @@ export interface Database {
         };
         Relationships: [];
       };
+      budget_rubros: {
+        Row: {
+          id: string;
+          budget_id: string;
+          number: number;
+          name: string;
+          sort_order: number;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          budget_id: string;
+          number: number;
+          name: string;
+          sort_order?: number;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          budget_id?: string;
+          number?: number;
+          name?: string;
+          sort_order?: number;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
+      budget_sub_items: {
+        Row: {
+          id: string;
+          rubro_id: string;
+          code: string;
+          description: string;
+          unit: string;
+          quantity: number;
+          subtotal_materials: number;
+          subtotal_labor: number;
+          cost_net_total: number;
+          sort_order: number;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          rubro_id: string;
+          code: string;
+          description: string;
+          unit?: string;
+          quantity?: number;
+          subtotal_materials?: number;
+          subtotal_labor?: number;
+          cost_net_total?: number;
+          sort_order?: number;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          rubro_id?: string;
+          code?: string;
+          description?: string;
+          unit?: string;
+          quantity?: number;
+          subtotal_materials?: number;
+          subtotal_labor?: number;
+          cost_net_total?: number;
+          sort_order?: number;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
+      budget_sub_item_materials: {
+        Row: {
+          id: string;
+          sub_item_id: string;
+          insumo_code: number | null;
+          description: string;
+          unit: string;
+          quantity: number;
+          unit_price: number;
+          total: number;
+          sort_order: number;
+        };
+        Insert: {
+          id?: string;
+          sub_item_id: string;
+          insumo_code?: number | null;
+          description: string;
+          unit: string;
+          quantity?: number;
+          unit_price?: number;
+          total?: number;
+          sort_order?: number;
+        };
+        Update: {
+          id?: string;
+          sub_item_id?: string;
+          insumo_code?: number | null;
+          description?: string;
+          unit?: string;
+          quantity?: number;
+          unit_price?: number;
+          total?: number;
+          sort_order?: number;
+        };
+        Relationships: [];
+      };
+      budget_sub_item_labor: {
+        Row: {
+          id: string;
+          sub_item_id: string;
+          labor_category: string;
+          hours: number;
+          hourly_rate: number;
+          total: number;
+          sort_order: number;
+        };
+        Insert: {
+          id?: string;
+          sub_item_id: string;
+          labor_category: string;
+          hours?: number;
+          hourly_rate?: number;
+          total?: number;
+          sort_order?: number;
+        };
+        Update: {
+          id?: string;
+          sub_item_id?: string;
+          labor_category?: string;
+          hours?: number;
+          hourly_rate?: number;
+          total?: number;
+          sort_order?: number;
+        };
+        Relationships: [];
+      };
+      budget_offer_structure: {
+        Row: {
+          id: string;
+          budget_id: string;
+          subtotal_construction: number;
+          general_expenses_pct: number;
+          general_expenses_amount: number;
+          profit_pct: number;
+          profit_amount: number;
+          taxes_pct: number;
+          taxes_amount: number;
+          final_price: number;
+        };
+        Insert: {
+          id?: string;
+          budget_id: string;
+          subtotal_construction?: number;
+          general_expenses_pct?: number;
+          general_expenses_amount?: number;
+          profit_pct?: number;
+          profit_amount?: number;
+          taxes_pct?: number;
+          taxes_amount?: number;
+          final_price?: number;
+        };
+        Update: {
+          id?: string;
+          budget_id?: string;
+          subtotal_construction?: number;
+          general_expenses_pct?: number;
+          general_expenses_amount?: number;
+          profit_pct?: number;
+          profit_amount?: number;
+          taxes_pct?: number;
+          taxes_amount?: number;
+          final_price?: number;
+        };
+        Relationships: [];
+      };
+      budget_labor_rates: {
+        Row: {
+          id: string;
+          budget_id: string;
+          category: string;
+          base_daily_price: number;
+          attendance_bonus_pct: number;
+          social_charges_pct: number;
+          art_pct: number;
+          other_pct: number;
+          daily_cost: number;
+          hourly_cost: number;
+        };
+        Insert: {
+          id?: string;
+          budget_id: string;
+          category: string;
+          base_daily_price?: number;
+          attendance_bonus_pct?: number;
+          social_charges_pct?: number;
+          art_pct?: number;
+          other_pct?: number;
+          daily_cost?: number;
+          hourly_cost?: number;
+        };
+        Update: {
+          id?: string;
+          budget_id?: string;
+          category?: string;
+          base_daily_price?: number;
+          attendance_bonus_pct?: number;
+          social_charges_pct?: number;
+          art_pct?: number;
+          other_pct?: number;
+          daily_cost?: number;
+          hourly_cost?: number;
+        };
+        Relationships: [];
+      };
+      budget_general_expenses: {
+        Row: {
+          id: string;
+          budget_id: string;
+          concept: string;
+          month_amounts: number[];
+          total: number;
+          sort_order: number;
+        };
+        Insert: {
+          id?: string;
+          budget_id: string;
+          concept: string;
+          month_amounts?: number[];
+          total?: number;
+          sort_order?: number;
+        };
+        Update: {
+          id?: string;
+          budget_id?: string;
+          concept?: string;
+          month_amounts?: number[];
+          total?: number;
+          sort_order?: number;
+        };
+        Relationships: [];
+      };
     };
     Views: Record<string, never>;
     Functions: Record<string, never>;
