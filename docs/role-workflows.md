@@ -22,16 +22,15 @@ El perfil `operator` actúa como `Director`: puede ver y operar todos los flujos
 
 ### Madurez general
 
-- Núcleo operativo de obra: `100%`
-- Control ejecutivo multiobra: `100%`
-- Finanzas por obra: `100%`
-- Separación de roles y navegación: `100%`
-- Administración integral contractual: `100%`
+- Núcleo operativo de obra: avanzado, pero pendiente de piloto real y UX móvil de campo.
+- Control ejecutivo multiobra: funcional en tableros, pendiente de reportes exportables y alertas accionables.
+- Finanzas por obra: avanzado en compras, mano de obra, certificados y caja, pendiente de conciliación, vencimientos y cuentas.
+- Separación de roles y navegación: implementada en aplicación, pendiente de hardening completo de RLS en todos los módulos nuevos.
+- Administración contractual: funcional en contratos, adendas y publicación al cliente, pendiente de documentos firmados y trazabilidad formal.
 
 ### Estado general del producto
 
-- Producto total como sistema integral para estudio: `100%`
-- El alcance objetivo de AMP para esta etapa quedó cubierto desde la web: operación, control, finanzas por obra, onboarding, gobierno contractual y portal cliente curado.
+AMP está en etapa pre-MVP avanzada. El objetivo inmediato es convertir los módulos existentes en un flujo usable de punta a punta para un estudio de arquitectura: alta de obra, baseline, ejecución diaria, control económico, reportes y portal cliente. La etapa no se considera cerrada hasta que pasen los chequeos técnicos, las políticas de seguridad estén endurecidas y al menos una obra piloto pueda operarse sin planillas paralelas.
 
 ## Roles
 

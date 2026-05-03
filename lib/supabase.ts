@@ -1,6 +1,7 @@
 import { createBrowserClient } from "@supabase/ssr";
 import { createClient } from "@supabase/supabase-js";
 import { Database } from "./types/supabase";
+import { assertPublicSupabaseKey } from "@/lib/supabase/public-key";
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "";
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? "";
@@ -13,6 +14,8 @@ if (!supabaseUrl || !supabaseAnonKey) {
     }
     // During build/prerendering, allow the module to load with empty values.
     // Actual API calls will fail but static page generation won't crash.
+} else {
+    assertPublicSupabaseKey(supabaseAnonKey);
 }
 
 export const supabase =
@@ -24,4 +27,3 @@ export const supabase =
               },
           })
         : createBrowserClient<Database>(supabaseUrl || "https://placeholder.supabase.co", supabaseAnonKey || "placeholder");
-

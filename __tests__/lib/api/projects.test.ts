@@ -13,7 +13,7 @@ describe("getProjects", () => {
     it("returns all projects", () => {
         const projects = getProjects();
         expect(projects).toEqual(PROJECTS);
-        expect(projects.length).toBe(6);
+        expect(projects.length).toBe(PROJECTS.length);
     });
 
     it("each project has required fields", () => {

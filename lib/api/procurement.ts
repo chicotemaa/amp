@@ -7,6 +7,7 @@ import type {
   PurchaseOrderPayment,
   PurchaseOrderStatus,
   Supplier,
+  SupplierDirectoryItem,
 } from "@/lib/types/procurement";
 
 type SupplierRow = Database["public"]["Tables"]["suppliers"]["Row"];
@@ -205,6 +206,158 @@ export async function getSuppliersDb(): Promise<Supplier[]> {
   }
 
   return ((data ?? []) as SupplierRow[]).map(mapSupplier);
+}
+
+export async function getSupplierDirectoryDb(): Promise<SupplierDirectoryItem[]> {
+  const [
+    { data: supplierData, error: supplierError },
+    { data: orderData, error: orderError },
+    { data: paymentData, error: paymentError },
+  ] = await Promise.all([
+    supabase.from("suppliers").select("*").order("name", { ascending: true }),
+    supabase.from("purchase_orders").select("*").order("order_date", { ascending: false }),
+    supabase.from("purchase_order_payments").select("*"),
+  ]);
+
+  if (supplierError || orderError || paymentError) {
+    console.error(
+      "Supabase supplier directory error:",
+      supplierError?.message ?? orderError?.message ?? paymentError?.message
+    );
+    return [];
+  }
+
+  const suppliers = ((supplierData ?? []) as SupplierRow[]).map(mapSupplier);
+  const orders = enrichPurchaseOrders(
+    (orderData ?? []) as PurchaseOrderRow[],
+    (paymentData ?? []) as PurchaseOrderPaymentRow[]
+  );
+  const today = new Date().toISOString().slice(0, 10);
+
+  return suppliers.map((supplier) => {
+    const supplierOrders = orders.filter((order) => order.supplierId === supplier.id);
+    const activeProjectIds = new Set(
+      supplierOrders
+        .filter((order) => !["cancelled", "paid"].includes(order.status))
+        .map((order) => order.projectId)
+    );
+
+    return {
+      ...supplier,
+      orderCount: supplierOrders.length,
+      totalOrdered: Math.round(
+        supplierOrders
+          .filter((order) => order.status !== "cancelled")
+          .reduce((sum, order) => sum + order.totalAmount, 0) * 100
+      ) / 100,
+      totalPaid: Math.round(
+        supplierOrders.reduce((sum, order) => sum + order.paidAmount, 0) * 100
+      ) / 100,
+      totalPending: Math.round(
+        supplierOrders
+          .filter((order) => !["cancelled", "draft"].includes(order.status))
+          .reduce((sum, order) => sum + order.remainingAmount, 0) * 100
+      ) / 100,
+      overdueAmount: Math.round(
+        supplierOrders
+          .filter(
+            (order) =>
+              !["cancelled", "draft"].includes(order.status) &&
+              order.remainingAmount > 0 &&
+              order.dueDate !== null &&
+              order.dueDate < today
+          )
+          .reduce((sum, order) => sum + order.remainingAmount, 0) * 100
+      ) / 100,
+      activeProjectCount: activeProjectIds.size,
+      lastOrderDate:
+        supplierOrders
+          .map((order) => order.orderDate)
+          .sort((left, right) => right.localeCompare(left))[0] ?? null,
+    };
+  });
+}
+
+export type CreateSupplierInput = Omit<Supplier, "id" | "createdAt">;
+
+export async function createSupplierDb(input: CreateSupplierInput): Promise<Supplier> {
+  const newId = Date.now();
+  const { data, error } = await supabase
+    .from("suppliers")
+    .insert({
+      id: newId,
+      name: input.name,
+      contact_name: input.contactName,
+      email: input.email,
+      phone: input.phone,
+      category: input.category,
+      is_active: input.isActive,
+    })
+    .select()
+    .single();
+
+  if (error || !data) {
+    console.error("Error creating supplier:", error?.message);
+    throw new Error("No se pudo crear el proveedor.");
+  }
+
+  await logCurrentUserAuditEvent({
+    entityType: "supplier",
+    entityId: String((data as SupplierRow).id),
+    action: "create",
+    fromState: null,
+    toState: (data as SupplierRow).category,
+    metadata: {
+      name: (data as SupplierRow).name,
+      isActive: (data as SupplierRow).is_active,
+    },
+  });
+
+  return mapSupplier(data as SupplierRow);
+}
+
+export async function updateSupplierDb(
+  id: number,
+  input: Partial<CreateSupplierInput>
+): Promise<Supplier> {
+  const updates: Database["public"]["Tables"]["suppliers"]["Update"] = {};
+  if (input.name !== undefined) updates.name = input.name;
+  if (input.contactName !== undefined) updates.contact_name = input.contactName;
+  if (input.email !== undefined) updates.email = input.email;
+  if (input.phone !== undefined) updates.phone = input.phone;
+  if (input.category !== undefined) updates.category = input.category;
+  if (input.isActive !== undefined) updates.is_active = input.isActive;
+
+  const { data: currentData } = await supabase
+    .from("suppliers")
+    .select("*")
+    .eq("id", id)
+    .single();
+
+  const { data, error } = await supabase
+    .from("suppliers")
+    .update(updates)
+    .eq("id", id)
+    .select()
+    .single();
+
+  if (error || !data) {
+    console.error("Error updating supplier:", error?.message);
+    throw new Error("No se pudo actualizar el proveedor.");
+  }
+
+  await logCurrentUserAuditEvent({
+    entityType: "supplier",
+    entityId: String(id),
+    action: "update",
+    fromState: (currentData as SupplierRow | null)?.category ?? null,
+    toState: (data as SupplierRow).category,
+    metadata: {
+      changedFields: Object.keys(updates),
+    },
+  });
+
+  return mapSupplier(data as SupplierRow);
 }
 
 export async function getPurchaseOrdersByProjectDb(projectId: number): Promise<PurchaseOrder[]> {

@@ -7,6 +7,7 @@ import {
   DollarSign,
   LayoutDashboard,
   ShieldCheck,
+  Truck,
   UserCircle,
   Users,
 } from "lucide-react";
@@ -120,6 +121,15 @@ const NAVIGATION_ITEMS: NavigationItem[] = [
     visibleWhen: (role) => can(role, "cashflow.view"),
   },
   {
+    href: "/suppliers",
+    label: "Proveedores",
+    description: "Cuentas, compras pendientes y estado de proveedores.",
+    icon: Truck,
+    section: "finance",
+    activeMatch: "prefix",
+    visibleWhen: (role) => can(role, "suppliers.view"),
+  },
+  {
     href: "/users",
     label: "Accesos",
     description: "Usuarios, perfiles y permisos del sistema.",
@@ -187,4 +197,3 @@ export function getNavigationSections(role: AppRole | null): NavigationSection[]
     items: visibleItems.filter((item) => item.section === section.id),
   })).filter((section) => section.items.length > 0);
 }
-
