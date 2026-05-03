@@ -47,6 +47,16 @@ export interface Supplier {
   createdAt: string;
 }
 
+export interface SupplierDirectoryItem extends Supplier {
+  orderCount: number;
+  totalOrdered: number;
+  totalPaid: number;
+  totalPending: number;
+  overdueAmount: number;
+  activeProjectCount: number;
+  lastOrderDate: string | null;
+}
+
 export interface PurchaseOrder {
   id: string;
   projectId: number;

@@ -2,6 +2,7 @@ import { createServerClient, type CookieOptions } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 import type { Database } from "@/lib/types/supabase";
 import { canAccessRoute, getDefaultRouteForRole, type AppRole } from "@/lib/auth/roles";
+import { assertPublicSupabaseKey } from "@/lib/supabase/public-key";
 
 const PUBLIC_PATHS = ["/login", "/api/agenda-notifications/dispatch"];
 
@@ -17,6 +18,8 @@ export async function updateSession(request: NextRequest) {
   if (!supabaseUrl || !supabaseAnonKey) {
     return NextResponse.next({ request });
   }
+
+  assertPublicSupabaseKey(supabaseAnonKey);
 
   let response = NextResponse.next({ request });
 

@@ -28,17 +28,25 @@ npm run start      # servir build
 
 - `app/`: rutas App Router.
 - `components/`: UI y módulos de negocio por dominio.
-- `lib/data`: datasets locales (mock/demo).
-- `lib/api`: capa de acceso a datos (actualmente en memoria).
+- `lib/data`: datasets locales usados por tests y fallback/demo.
+- `lib/api`: capa de acceso a datos Supabase y helpers de dominio.
 - `lib/types`: tipos de dominio.
 - `contexts/`: estado compartido (filtros).
 - `.github/workflows/ci.yml`: pipeline de calidad/build.
 
 ## Estado Actual del Proyecto
 
-- La autenticación es visual/demostrativa (no hay sesión real ni backend auth).
-- La persistencia de documentos y presupuestos se realiza en `localStorage`.
-- La capa `lib/api` usa datasets locales de `lib/data`.
+- La autenticación usa Supabase Auth con perfiles, roles y middleware de acceso.
+- La mayor parte del dominio operativo ya persiste en Supabase: proyectos, clientes, usuarios, documentos, presupuesto, planificación, avances, incidencias, mano de obra, compras, contratos, certificados, agenda y auditoría.
+- Todavía quedan datasets locales para tests/fallback y funciones legacy sin sufijo `Db`; antes del MVP deben quedar claramente separadas de la capa productiva.
+- El foco actual es estabilizar el producto hacia MVP: calidad técnica, RLS, flujos de obra completos, caja/cobranzas/pagos y experiencia móvil de campo.
+
+## Variables de Entorno
+
+- `NEXT_PUBLIC_SUPABASE_URL`: URL pública del proyecto Supabase.
+- `NEXT_PUBLIC_SUPABASE_ANON_KEY`: clave pública `anon` o `publishable`. Nunca usar `service_role`, `sb_secret_*` ni otra clave secreta porque se expone al navegador.
+- `SUPABASE_SERVICE_ROLE_KEY`: clave server-only para procesos protegidos. No debe tener prefijo `NEXT_PUBLIC_`.
+- `RESEND_API_KEY`, `AGENDA_NOTIFICATION_DISPATCH_SECRET`, `CRON_SECRET`: server-only.
 
 ## Convenciones
 

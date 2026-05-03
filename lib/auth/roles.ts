@@ -34,6 +34,8 @@ export type Permission =
   | "reports.generate"
   | "calendar.view"
   | "cashflow.view"
+  | "suppliers.view"
+  | "suppliers.manage"
   | "stock.view"
   | "stock.move"
   | "users.view"
@@ -106,6 +108,8 @@ export const ROLE_CONFIG: Record<AppRole, RoleConfig> = {
       "reports.generate",
       "calendar.view",
       "cashflow.view",
+      "suppliers.view",
+      "suppliers.manage",
       "stock.view",
       "stock.move",
       "users.view",
@@ -151,6 +155,8 @@ export const ROLE_CONFIG: Record<AppRole, RoleConfig> = {
       "reports.view",
       "reports.generate",
       "calendar.view",
+      "suppliers.view",
+      "suppliers.manage",
       "stock.view",
       "stock.move",
     ],
@@ -171,6 +177,7 @@ export const ROLE_CONFIG: Record<AppRole, RoleConfig> = {
       "incidents.resolve",
       "documents.view",
       "documents.upload",
+      "suppliers.view",
       "stock.view",
       "stock.move",
     ],
@@ -195,6 +202,7 @@ export const INTERNAL_MENU_ITEMS: MenuItem[] = [
   { href: "/employees", label: "Personal", permission: "employees.view" },
   { href: "/reports", label: "Reportes", permission: "reports.view" },
   { href: "/cashflow", label: "Cashflow", permission: "cashflow.view" },
+  { href: "/suppliers", label: "Proveedores", permission: "suppliers.view" },
   { href: "/users", label: "Usuarios", permission: "users.view" },
 ];
 
@@ -272,6 +280,7 @@ export function canAccessRoute(role: AppRole | null, pathname: string) {
   if (isPath("/employees")) return can(role, "employees.view");
   if (isPath("/reports")) return can(role, "reports.view");
   if (isPath("/cashflow")) return can(role, "cashflow.view");
+  if (isPath("/suppliers")) return can(role, "suppliers.view");
   if (isPath("/users")) return can(role, "users.view");
 
   return true;

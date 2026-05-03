@@ -14,6 +14,19 @@ import {
   DEFAULT_RUBROS,
   DEFAULT_LABOR_RATES,
 } from "@/lib/types/budget-computo";
+import type { Database } from "@/lib/types/supabase";
+
+type BudgetRubroRow = Database["public"]["Tables"]["budget_rubros"]["Row"];
+type BudgetSubItemRow = Database["public"]["Tables"]["budget_sub_items"]["Row"];
+type BudgetSubItemMaterialRow =
+  Database["public"]["Tables"]["budget_sub_item_materials"]["Row"];
+type BudgetSubItemLaborRow =
+  Database["public"]["Tables"]["budget_sub_item_labor"]["Row"];
+type BudgetOfferStructureRow =
+  Database["public"]["Tables"]["budget_offer_structure"]["Row"];
+type BudgetLaborRateRow = Database["public"]["Tables"]["budget_labor_rates"]["Row"];
+type BudgetGeneralExpenseRow =
+  Database["public"]["Tables"]["budget_general_expenses"]["Row"];
 
 function makeId() {
   return crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).slice(2, 10);
@@ -42,21 +55,29 @@ export async function getBudgetComputo(budgetId: string): Promise<BudgetComputo>
     supabase.from("budget_general_expenses").select("*").eq("budget_id", budgetId).order("sort_order"),
   ]);
 
-  const rubroIds = (rubrosData ?? []).map((r: any) => r.id);
+  const rubroRows = (rubrosData ?? []) as BudgetRubroRow[];
+  const subItemRows = (subItemsData ?? []) as BudgetSubItemRow[];
+  const materialRows = (materialsData ?? []) as BudgetSubItemMaterialRow[];
+  const laborRows = (laborData ?? []) as BudgetSubItemLaborRow[];
+  const offerRow = offerData as BudgetOfferStructureRow | null;
+  const rateRows = (ratesData ?? []) as BudgetLaborRateRow[];
+  const expenseRows = (expensesData ?? []) as BudgetGeneralExpenseRow[];
+
+  const rubroIds = rubroRows.map((r) => r.id);
 
   // Filter sub-items to only those belonging to this budget's rubros
-  const subItems = (subItemsData ?? []).filter((si: any) => rubroIds.includes(si.rubro_id));
-  const subItemIds = subItems.map((si: any) => si.id);
+  const subItems = subItemRows.filter((si) => rubroIds.includes(si.rubro_id));
+  const subItemIds = subItems.map((si) => si.id);
 
   // Filter materials and labor to only this budget's sub-items
-  const materials = (materialsData ?? []).filter((m: any) => subItemIds.includes(m.sub_item_id));
-  const labor = (laborData ?? []).filter((l: any) => subItemIds.includes(l.sub_item_id));
+  const materials = materialRows.filter((m) => subItemIds.includes(m.sub_item_id));
+  const labor = laborRows.filter((l) => subItemIds.includes(l.sub_item_id));
 
   // Build nested structure
-  const rubros: BudgetRubro[] = (rubrosData ?? []).map((r: any) => {
+  const rubros: BudgetRubro[] = rubroRows.map((r) => {
     const rubroSubItems: BudgetSubItem[] = subItems
-      .filter((si: any) => si.rubro_id === r.id)
-      .map((si: any): BudgetSubItem => ({
+      .filter((si) => si.rubro_id === r.id)
+      .map((si): BudgetSubItem => ({
         id: si.id,
         rubroId: si.rubro_id,
         code: si.code,
@@ -68,8 +89,8 @@ export async function getBudgetComputo(budgetId: string): Promise<BudgetComputo>
         costNetTotal: Number(si.cost_net_total),
         sortOrder: si.sort_order,
         materials: materials
-          .filter((m: any) => m.sub_item_id === si.id)
-          .map((m: any): SubItemMaterial => ({
+          .filter((m) => m.sub_item_id === si.id)
+          .map((m): SubItemMaterial => ({
             id: m.id,
             subItemId: m.sub_item_id,
             insumoCode: m.insumo_code,
@@ -81,8 +102,8 @@ export async function getBudgetComputo(budgetId: string): Promise<BudgetComputo>
             sortOrder: m.sort_order,
           })),
         labor: labor
-          .filter((l: any) => l.sub_item_id === si.id)
-          .map((l: any): SubItemLabor => ({
+          .filter((l) => l.sub_item_id === si.id)
+          .map((l): SubItemLabor => ({
             id: l.id,
             subItemId: l.sub_item_id,
             laborCategory: l.labor_category as LaborCategory,
@@ -112,22 +133,22 @@ export async function getBudgetComputo(budgetId: string): Promise<BudgetComputo>
     r.incidencePct = grandTotal > 0 ? (r.total / grandTotal) * 100 : 0;
   });
 
-  const offerStructure: BudgetOfferStructure | null = offerData
+  const offerStructure: BudgetOfferStructure | null = offerRow
     ? {
-        id: offerData.id,
-        budgetId: offerData.budget_id,
-        subtotalConstruction: Number(offerData.subtotal_construction),
-        generalExpensesPct: Number(offerData.general_expenses_pct),
-        generalExpensesAmount: Number(offerData.general_expenses_amount),
-        profitPct: Number(offerData.profit_pct),
-        profitAmount: Number(offerData.profit_amount),
-        taxesPct: Number(offerData.taxes_pct),
-        taxesAmount: Number(offerData.taxes_amount),
-        finalPrice: Number(offerData.final_price),
+        id: offerRow.id,
+        budgetId: offerRow.budget_id,
+        subtotalConstruction: Number(offerRow.subtotal_construction),
+        generalExpensesPct: Number(offerRow.general_expenses_pct),
+        generalExpensesAmount: Number(offerRow.general_expenses_amount),
+        profitPct: Number(offerRow.profit_pct),
+        profitAmount: Number(offerRow.profit_amount),
+        taxesPct: Number(offerRow.taxes_pct),
+        taxesAmount: Number(offerRow.taxes_amount),
+        finalPrice: Number(offerRow.final_price),
       }
     : null;
 
-  const laborRates: BudgetLaborRate[] = (ratesData ?? []).map((r: any) => ({
+  const laborRates: BudgetLaborRate[] = rateRows.map((r) => ({
     id: r.id,
     budgetId: r.budget_id,
     category: r.category as LaborCategory,
@@ -140,7 +161,7 @@ export async function getBudgetComputo(budgetId: string): Promise<BudgetComputo>
     hourlyCost: Number(r.hourly_cost),
   }));
 
-  const generalExpenses: BudgetGeneralExpense[] = (expensesData ?? []).map((e: any) => ({
+  const generalExpenses: BudgetGeneralExpense[] = expenseRows.map((e) => ({
     id: e.id,
     budgetId: e.budget_id,
     concept: e.concept,
@@ -229,13 +250,14 @@ export async function createRubro(
     .single();
 
   if (error || !row) return null;
+  const rubroRow = row as BudgetRubroRow;
 
   return {
-    id: row.id,
-    budgetId: row.budget_id,
-    number: row.number,
-    name: row.name,
-    sortOrder: row.sort_order,
+    id: rubroRow.id,
+    budgetId: rubroRow.budget_id,
+    number: rubroRow.number,
+    name: rubroRow.name,
+    sortOrder: rubroRow.sort_order,
     subItems: [],
     total: 0,
     incidencePct: 0,
@@ -285,18 +307,19 @@ export async function createSubItem(
     .single();
 
   if (error || !row) return null;
+  const subItemRow = row as BudgetSubItemRow;
 
   return {
-    id: row.id,
-    rubroId: row.rubro_id,
-    code: row.code,
-    description: row.description,
-    unit: row.unit,
-    quantity: Number(row.quantity),
+    id: subItemRow.id,
+    rubroId: subItemRow.rubro_id,
+    code: subItemRow.code,
+    description: subItemRow.description,
+    unit: subItemRow.unit,
+    quantity: Number(subItemRow.quantity),
     subtotalMaterials: 0,
     subtotalLabor: 0,
     costNetTotal: 0,
-    sortOrder: row.sort_order,
+    sortOrder: subItemRow.sort_order,
     materials: [],
     labor: [],
   };
