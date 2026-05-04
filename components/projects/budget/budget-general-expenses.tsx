@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -48,6 +48,20 @@ export function BudgetGeneralExpensesTable({
       sortOrder: e.sortOrder,
     }))
   );
+
+  useEffect(() => {
+    setExpenses(
+      initialExpenses.map((e) => ({
+        concept: e.concept,
+        monthAmounts: [
+          ...e.monthAmounts,
+          ...Array(Math.max(0, months - e.monthAmounts.length)).fill(0),
+        ].slice(0, months),
+        total: e.total,
+        sortOrder: e.sortOrder,
+      }))
+    );
+  }, [initialExpenses, months]);
 
   const updateMonthAmount = (
     expIdx: number,
