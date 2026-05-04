@@ -14,6 +14,8 @@ import { BudgetLaborRatesTable } from "./budget-labor-rates-table";
 import { BudgetGeneralExpensesTable } from "./budget-general-expenses";
 import { BudgetRubroDialog } from "./budget-rubro-dialog";
 import { BudgetSubItemDialog } from "./budget-sub-item-dialog";
+import { BudgetExcelImportPanel } from "./budget-excel-import-panel";
+import { BudgetImportControlPanel } from "./budget-import-control-panel";
 
 import type {
   BudgetComputo,
@@ -41,7 +43,9 @@ import {
   saveOfferStructure,
   saveLaborRates,
   saveGeneralExpenses,
+  importBudgetComputoPreview,
 } from "@/lib/api/budget-computo";
+import type { BudgetExcelImportPreview } from "@/lib/types/budget-excel";
 
 interface BudgetComputoModuleProps {
   budgetId: string;
@@ -93,6 +97,12 @@ export function BudgetComputoModule({
     } catch (error) {
       toast.error("No se pudo inicializar la estructura.");
     }
+  };
+
+  const handleImportExcel = async (preview: BudgetExcelImportPreview) => {
+    await importBudgetComputoPreview(budgetId, preview);
+    await loadData();
+    toast.success("Cómputo y presupuesto importados desde Excel.");
   };
 
   // ── Rubro handlers ──
@@ -231,17 +241,19 @@ export function BudgetComputoModule({
   // Empty state: no rubros
   if (!computo || computo.rubros.length === 0) {
     return (
-      <div className="rounded-lg border border-dashed p-8 text-center space-y-3">
-        <h3 className="text-lg font-semibold">
-          Sin estructura de cómputo cargada
-        </h3>
-        <p className="text-sm text-muted-foreground">
-          Inicializá la estructura con los 16 rubros estándar de obra
-          (Terreno, Estructura, Albañilería, etc.) y las tarifas de mano de obra UOCRA.
-        </p>
-        <Button onClick={handleBootstrap}>
-          Inicializar estructura estándar
-        </Button>
+      <div className="grid gap-6 xl:grid-cols-[0.8fr_1.2fr]">
+        <div className="rounded-lg border border-dashed p-8 text-center space-y-3">
+          <h3 className="text-lg font-semibold">
+            Sin estructura de cómputo cargada
+          </h3>
+          <p className="text-sm text-muted-foreground">
+            Inicializá la estructura con los 16 rubros estándar de obra y las tarifas de mano de obra UOCRA.
+          </p>
+          <Button onClick={handleBootstrap}>
+            Inicializar estructura estándar
+          </Button>
+        </div>
+        <BudgetExcelImportPanel onImport={handleImportExcel} />
       </div>
     );
   }
@@ -251,14 +263,23 @@ export function BudgetComputoModule({
       .find((r) => r.id === targetRubroId)
       ?.subItems.length ?? 0;
 
+  const projectMonths = Math.max(
+    7,
+    computo.generalExpenses[0]?.monthAmounts.length ?? 0,
+    computo.workPlan[0]?.monthPercentages.length ?? 0,
+    computo.disbursements.length
+  );
+
   return (
     <div className="space-y-6">
       <Tabs defaultValue="computo" className="space-y-4">
-        <TabsList className="grid grid-cols-5 w-full max-w-2xl">
+        <TabsList className="flex h-auto w-full flex-wrap justify-start gap-1">
           <TabsTrigger value="computo">Cómputo</TabsTrigger>
+          <TabsTrigger value="import">Importación</TabsTrigger>
           <TabsTrigger value="offer">Estr. Oferta</TabsTrigger>
           <TabsTrigger value="labor">Mano de Obra</TabsTrigger>
           <TabsTrigger value="expenses">Gastos Grales.</TabsTrigger>
+          <TabsTrigger value="plan">Plan y Flujo</TabsTrigger>
           <TabsTrigger value="summary">Resumen</TabsTrigger>
         </TabsList>
 
@@ -277,7 +298,12 @@ export function BudgetComputoModule({
           />
         </TabsContent>
 
-        {/* Tab 2: Estructura de Oferta */}
+        {/* Tab 2: Excel import */}
+        <TabsContent value="import" className="space-y-6">
+          <BudgetExcelImportPanel onImport={handleImportExcel} />
+        </TabsContent>
+
+        {/* Tab 3: Estructura de Oferta */}
         <TabsContent value="offer">
           <BudgetOfferStructureCard
             offer={computo.offerStructure}
@@ -286,7 +312,7 @@ export function BudgetComputoModule({
           />
         </TabsContent>
 
-        {/* Tab 3: Mano de Obra */}
+        {/* Tab 4: Mano de Obra */}
         <TabsContent value="labor">
           <BudgetLaborRatesTable
             rates={computo.laborRates}
@@ -294,16 +320,27 @@ export function BudgetComputoModule({
           />
         </TabsContent>
 
-        {/* Tab 4: Gastos Generales */}
+        {/* Tab 5: Gastos Generales */}
         <TabsContent value="expenses">
           <BudgetGeneralExpensesTable
             expenses={computo.generalExpenses}
-            projectMonths={7}
+            projectMonths={projectMonths}
             onSave={handleSaveGeneralExpenses}
           />
         </TabsContent>
 
-        {/* Tab 5: Summary (reuses the offer structure for quick overview) */}
+        {/* Tab 6: Plan y flujo */}
+        <TabsContent value="plan">
+          <BudgetImportControlPanel
+            imports={computo.imports}
+            insumos={computo.insumos}
+            typologies={computo.typologies}
+            workPlan={computo.workPlan}
+            disbursements={computo.disbursements}
+          />
+        </TabsContent>
+
+        {/* Tab 7: Summary */}
         <TabsContent value="summary">
           <div className="grid gap-6 lg:grid-cols-2">
             <BudgetOfferStructureCard
@@ -343,6 +380,21 @@ export function BudgetComputoModule({
                   </div>
                 ))}
               </div>
+              {computo.imports[0] && (
+                <div className="rounded-lg border p-4 space-y-2">
+                  <h3 className="font-semibold text-sm mb-3">
+                    Fuente del Presupuesto
+                  </h3>
+                  <div className="text-sm">
+                    <p className="font-medium">{computo.imports[0].fileName}</p>
+                    <p className="text-muted-foreground">
+                      {computo.imports[0].sourceSummary.insumoCount} insumos ·{" "}
+                      {computo.imports[0].sourceSummary.materialLineCount} materiales ·{" "}
+                      {computo.imports[0].sourceSummary.laborLineCount} líneas MO
+                    </p>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </TabsContent>

@@ -20,7 +20,7 @@ describe("assertPublicSupabaseKey", () => {
   });
 
   it("rejects secret keys", () => {
-    expect(() => assertPublicSupabaseKey("sb_secret_123")).toThrow(/secret key/i);
+    expect(() => assertPublicSupabaseKey("sb_secret_123")).toThrow(/privileged Supabase key/i);
   });
 
   it("rejects service role JWT keys", () => {

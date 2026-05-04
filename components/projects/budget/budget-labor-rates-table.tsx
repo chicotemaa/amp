@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -50,6 +50,10 @@ export function BudgetLaborRatesTable({
   onSave,
 }: BudgetLaborRatesTableProps) {
   const [rates, setRates] = useState(initialRates);
+
+  useEffect(() => {
+    setRates(initialRates);
+  }, [initialRates]);
 
   const updateField = (
     idx: number,

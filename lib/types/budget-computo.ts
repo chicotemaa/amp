@@ -3,6 +3,14 @@
 // Argentine construction budget Excel structure
 // ==========================================================
 
+import type {
+  BudgetDisbursement,
+  BudgetImportRecord,
+  BudgetInsumo,
+  BudgetTypology,
+  BudgetWorkPlanRubro,
+} from "@/lib/types/budget-excel";
+
 // ── Labor categories (UOCRA) ──
 export type LaborCategory =
   | "oficial_espec"
@@ -116,6 +124,11 @@ export interface BudgetComputo {
   offerStructure: BudgetOfferStructure | null;
   laborRates: BudgetLaborRate[];
   generalExpenses: BudgetGeneralExpense[];
+  imports: BudgetImportRecord[];
+  insumos: BudgetInsumo[];
+  typologies: BudgetTypology[];
+  workPlan: BudgetWorkPlanRubro[];
+  disbursements: BudgetDisbursement[];
   grandTotal: number;
 }
 
